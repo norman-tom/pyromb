@@ -1,4 +1,5 @@
 from cProfile import label
+import os
 
 import numpy as np
 from qgis2rorb.core.attributes.reach import Reach
@@ -11,9 +12,11 @@ from qgis2rorb.core.model.controlvector import Traveller
 
 from qgis2rorb.math import geometry
 
+
+
 def main():
-    path = 'C:\\Users\\toman\\Documents\\Code\\Hydrology\\RORB\\QGIS2RORB\\data'
-    builder = Builder(path + '\\test_reach.shp', path + '\\test_basin.shp', path + '\\test_centroid.shp', path + '\\test_confluence.shp')
+    dirname = os.path.dirname(__file__)
+    builder = Builder(os.path.join(dirname, 'data', 'test_reach.shp'), os.path.join(dirname, 'data', 'test_basin.shp'), os.path.join(dirname, 'data', 'test_centroid.shp'), os.path.join(dirname, 'data', 'test_confluence.shp'))
     tr = builder.reach()
     tc = builder.confluence()
     tb = builder.basin()
