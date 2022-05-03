@@ -8,14 +8,17 @@ import matplotlib.pyplot as plt
 
 def main():
     dirname = os.path.dirname(__file__)
+    
+    # Call the builder and pass it the shape files
     builder = Builder(os.path.join(dirname, 'data', 'test_reach.shp'), os.path.join(dirname, 'data', 'test_basin.shp'), os.path.join(dirname, 'data', 'test_centroid.shp'), os.path.join(dirname, 'data', 'test_confluence.shp'))
+    # Build each element
     tr = builder.reach()
     tc = builder.confluence()
     tb = builder.basin()
     
+    # Create a catchment and call connect. 
     catchment = Catchment(tc, tb, tr)
     connected = catchment.connect()
-
 
     #Plot the data to make sure it is correct.
     cx = []
@@ -80,9 +83,11 @@ def main():
     fig.tight_layout()
     #plt.show()
 
+    # Create the traveller and pass the catchment.
     traveller = Traveller(catchment)
 
     with open(os.path.join(dirname, 'vector.cat'), 'w') as f:
+        # Write the control vector to file with a call to the Traveller's getVector method
         f.write(traveller.getVector())
 
 
