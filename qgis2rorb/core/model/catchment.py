@@ -29,7 +29,7 @@ class Catchment:
         DS = 2
         not connected = 0
         """
-        __connectionMatrix = np.zeros((len(self._vertices), len(self._edges)), dtype=int)
+        connectionMatrix = np.zeros((len(self._vertices), len(self._edges)), dtype=int)
         for i, edge in enumerate(self._edges):
             s = edge.getStart()
             e = edge.getEnd()
@@ -46,8 +46,8 @@ class Catchment:
                 if tempEnd < minEnd:
                     closestEnd = j
                     minEnd = tempEnd
-            __connectionMatrix[closestStart][i] = 1
-            __connectionMatrix[closestEnd][i] = 2   
+            connectionMatrix[closestStart][i] = 1
+            connectionMatrix[closestEnd][i] = 2   
 
         """
         Find the 'out' node
@@ -69,41 +69,41 @@ class Catchment:
         Think about I as relating upstream nodes (m) to downstream nodes (m n) through reach (n) 
         (m n) of -1 indicates no downstream node for relationship m n
         """
-        __newIncidenceDS = np.zeros((len(self._vertices), len(self._edges)), dtype=int)
-        __newIncidenceDS.fill(self._endSentinel)
-        __newIncidenceUS = __newIncidenceDS.copy()
-        __queue = []
-        __colour = np.zeros((len(self._vertices), len(self._edges)))
+        newIncidenceDS = np.zeros((len(self._vertices), len(self._edges)), dtype=int)
+        newIncidenceDS.fill(self._endSentinel)
+        newIncidenceUS = newIncidenceDS.copy()
+        queue = []
+        colour = np.zeros((len(self._vertices), len(self._edges)))
         i = self._out
         j = 0
-        __queue.append((i, j))
-        while(len(__queue) != 0):
+        queue.append((i, j))
+        while(len(queue) != 0):
             #Move in the n direction
-            u = __queue.pop()
+            u = queue.pop()
             idxi = u[0]
             j = u[1]
-            for k in range(len(__connectionMatrix[u[0]])):
-                idxj = j % len(__connectionMatrix[idxi])
-                if __connectionMatrix[idxi][idxj] > 0:
-                    if __colour[idxi][idxj] == 0:
-                        __colour[idxi][idxj] = 1
+            for k in range(len(connectionMatrix[u[0]])):
+                idxj = j % len(connectionMatrix[idxi])
+                if connectionMatrix[idxi][idxj] > 0:
+                    if colour[idxi][idxj] == 0:
+                        colour[idxi][idxj] = 1
                         u = (idxi, idxj)
-                        __queue.append(u)
+                        queue.append(u)
                 j += 1
 
             #Move in the m direction
             i = u[0]
             idxj = u[1]
-            for l in range(len(__connectionMatrix)):
-                idxi = i % len(__connectionMatrix)
-                if __connectionMatrix[idxi][idxj] > 0:
-                    if __colour[idxi][idxj] == 0:
-                        __colour[idxi][idxj] = 1
-                        __queue.append((idxi, idxj))
-                        __newIncidenceUS[u[0]][u[1]] = idxi
-                        __newIncidenceDS[idxi][idxj] = u[0]
+            for l in range(len(connectionMatrix)):
+                idxi = i % len(connectionMatrix)
+                if connectionMatrix[idxi][idxj] > 0:
+                    if colour[idxi][idxj] == 0:
+                        colour[idxi][idxj] = 1
+                        queue.append((idxi, idxj))
+                        newIncidenceUS[u[0]][u[1]] = idxi
+                        newIncidenceDS[idxi][idxj] = u[0]
                 i += 1
-        self._incidenceMatrixDS = __newIncidenceDS.copy()
-        self._incidenceMatrixUS = __newIncidenceUS.copy()
+        self._incidenceMatrixDS = newIncidenceDS.copy()
+        self._incidenceMatrixUS = newIncidenceUS.copy()
         
         return (self._incidenceMatrixDS, self._incidenceMatrixUS)

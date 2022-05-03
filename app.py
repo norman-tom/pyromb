@@ -1,16 +1,10 @@
-from cProfile import label
 import os
-
 import numpy as np
-from qgis2rorb.core.attributes.reach import Reach
-from qgis2rorb.core.attributes.basin import Basin
-from qgis2rorb.core.attributes.confluence import Confluence
-from qgis2rorb.core.graph.catchment import Catchment
+from qgis2rorb.core.model.catchment import Catchment
 from qgis2rorb.core.gis.builder import Builder
-import matplotlib.pyplot as plt
 from qgis2rorb.core.model.controlvector import Traveller
+import matplotlib.pyplot as plt
 
-from qgis2rorb.math import geometry
 
 def main():
     dirname = os.path.dirname(__file__)

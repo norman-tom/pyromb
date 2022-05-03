@@ -25,19 +25,6 @@ class Reach(Line):
     def setSlope(self, slope: float):
         self._slope = slope
 
-    def mapIdx(self, direction: str):
-        """
-        Maps the start of the geometry to either the downstream or upstream end of the reach.
-        If the direction is "us" then the first coordinate in the vector is the upstream end.
-        If the direcion is "ds" the the first coordinate in the vector is the downstream end. 
-        """
-        if direction == 'us':
-            self._idx = 0
-        elif direction == "ds":
-            self._idx = self._end
-        else:
-            raise KeyError("Node direction not properly defines: \n")
-
     def getPoint(self, direction: str):
         """
         Returns either the point corresponding to the upstream 'us' or to the downstream 'ds'.

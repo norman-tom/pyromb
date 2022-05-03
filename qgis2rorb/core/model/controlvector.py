@@ -2,7 +2,7 @@ from turtle import down
 import numpy as np
 from qgis2rorb.core.attributes.reach import Reach
 
-from qgis2rorb.core.graph.catchment import Catchment
+from qgis2rorb.core.model.catchment import Catchment
 
 class Traveller:
     def __init__(self, catchment: Catchment):
