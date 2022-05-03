@@ -12,8 +12,6 @@ from qgis2rorb.core.model.controlvector import Traveller
 
 from qgis2rorb.math import geometry
 
-
-
 def main():
     dirname = os.path.dirname(__file__)
     builder = Builder(os.path.join(dirname, 'data', 'test_reach.shp'), os.path.join(dirname, 'data', 'test_basin.shp'), os.path.join(dirname, 'data', 'test_centroid.shp'), os.path.join(dirname, 'data', 'test_confluence.shp'))
@@ -25,7 +23,7 @@ def main():
     connected = catchment.connect()
 
 
-        #Plot the data to make sure it is correct.
+    #Plot the data to make sure it is correct.
     cx = []
     cy = []
     for c in tc:
@@ -86,12 +84,12 @@ def main():
 
     ax.set_title('Catchment Incidence Matrix (US)')
     fig.tight_layout()
-
     #plt.show()
 
     traveller = Traveller(catchment)
 
-    print(traveller.getVector())
+    with open(os.path.join(dirname, 'vector.cat'), 'w') as f:
+        f.write(traveller.getVector())
 
 
 if (__name__ == "__main__"):

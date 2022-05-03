@@ -1,3 +1,4 @@
+from turtle import down
 import numpy as np
 from qgis2rorb.core.attributes.reach import Reach
 
@@ -41,7 +42,9 @@ class Traveller:
         i = self._pos
         up = self._up(i)
         
-        if (self._runningHydro == False) and (self._catchment._vertices[i].getType() == 0):
+        if i == self._endSentinel:
+            return(0, i)
+        elif (self._runningHydro == False) and (self._catchment._vertices[i].getType() == 0):
             self._runningHydro = True
             self._next()
             return (1, i)
@@ -73,16 +76,16 @@ class Traveller:
                 else:
                     return "{},{},{},{},-99".format(code[0], r.getType(), round(r.length() / 1000, 3), r.getSlope())
             except:
-                return "{}".format(0)
+                return "{}\nout\n{}".format(7, 0)
         if (code[0] == 3) or (code[0] == 4):
             return "{}".format(code[0])
         if (code[0] == 0):
-            return "{}".format(0)
+            return "{}\nout\n'{}".format(7, 0)
 
     def _subAreaStr(self, code: list) -> str:
         areaStr = ""
         for c in code:
-            if c[0] == 1:
+            if (c[0] == 1) or (c[0] == 2):
                 areaStr += "{},".format(round(self._catchment._vertices[c[1]].getArea(), 6))
         areaStr += '-99'
         return areaStr
@@ -90,7 +93,7 @@ class Traveller:
     def _fracImpStr(self, code: list) -> str:
         fStr = "1,"
         for c in code:
-            if c[0] == 1:
+            if (c[0] == 1) or (c[0] == 2):
                 fStr += "{},".format(round(self._catchment._vertices[c[1]].getFI(), 3))
         fStr += '-99'
         return fStr
@@ -160,7 +163,7 @@ class Traveller:
         self._next()
         while(self._pos != self._endSentinel):
             stateVector.append(self._state())
-            controlVector.append(self._codedStr(stateVector[-1]))
+            controlVector.append(self._codedStr(stateVector[-1]))       
         subArea = self._subAreaStr(stateVector)
         fImp = self._fracImpStr(stateVector)
         catStr = header
@@ -168,5 +171,5 @@ class Traveller:
             catStr += s + "\n"
         catStr += subArea + "\n"
         catStr += fImp + "\n"
-        
+
         return catStr

@@ -41,7 +41,7 @@ class Builder():
                     min = j
             a = geometry.polygon_area(pointVector(self._shapeBasin.shape(min).points))
             fi = r['fi']
-            basins.append(Basin(r['id'], p[0], p[1], (a / 10E6), fi))
+            basins.append(Basin(r['id'], p[0], p[1], (a / 1E6), fi))
         return basins
 
 
