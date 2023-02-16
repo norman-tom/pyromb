@@ -1,8 +1,10 @@
 import os
 import numpy as np
-from qgis2rorb.core.model.catchment import Catchment
+from qgis2rorb.core.catchment import Catchment
 from qgis2rorb.core.gis.builder import Builder
-from qgis2rorb.core.model.controlvector import Traveller
+from qgis2rorb.core.traveller import Traveller
+from qgis2rorb.model.rorb import RORB
+from qgis2rorb.model.wbnm import WBNM
 import matplotlib.pyplot as plt
 
 
@@ -88,7 +90,7 @@ def main():
 
     with open(os.path.join(dirname, 'vector.cat'), 'w') as f:
         # Write the control vector to file with a call to the Traveller's getVector method
-        f.write(traveller.getVector())
+        f.write(traveller.getVector(WBNM()))
 
 
 if (__name__ == "__main__"):
