@@ -5,5 +5,5 @@ class Model(abc.ABC):
     Interface for the hydrological model classes. 
     '''
     @abc.abstractmethod
-    def getVector(self, traveller):
+    def getVector(self, traveller) -> str:
         pass
