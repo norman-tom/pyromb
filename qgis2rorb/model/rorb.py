@@ -18,7 +18,7 @@ class RORB(Model):
         stateVector = []
         subArea = ""
         fImp = ""
-        traveller._next()
+        traveller.next()
         while(traveller._pos != traveller._endSentinel):
             stateVector.append(self._state(traveller))
             controlVector.append(self._codedStr(stateVector[-1], traveller))       
@@ -51,27 +51,27 @@ class RORB(Model):
 
         """
         i = traveller._pos
-        up = traveller._up(i)
+        up = traveller.top(i)
         
         if i == traveller._endSentinel:
             return(0, i)
         elif (self._runningHydro == False) and (traveller._catchment._vertices[i].getType() == 0):
             self._runningHydro = True
-            traveller._next()
+            traveller.next()
             return (1, i)
         elif (self._storedHydro) and (self._storedHydro[-1] == i) and (self._runningHydro):
             self._storedHydro.pop()
             return (4, i)
         elif (self._runningHydro) and (traveller._catchment._vertices[i].getType() == 0) and (up == i):
-            traveller._next()
+            traveller.next()
             return (2, i)
         elif (self._runningHydro) and (up != i):
             self._storedHydro.append(i)
             self._runningHydro = False
-            traveller._next()
+            traveller.next()
             return (3, i)
         elif (self._runningHydro) and (traveller._catchment._vertices[i].getType() == 1) and (up == i):
-            traveller._next()
+            traveller.next()
             return (5, i)
     
 
@@ -81,7 +81,7 @@ class RORB(Model):
         """
         if (code[0] == 1) or (code[0] == 2) or (code[0] == 5):
             try:
-                r = traveller._findReach(code[1])
+                r = traveller.getReach(code[1])
                 if (r.getType() == 1) or (r.getType() == 4):
                     return "{},{},{},-99".format(code[0], r.getType(), round(r.length() / 1000, 3))
                 else:

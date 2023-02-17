@@ -18,7 +18,7 @@ def main():
     # Create the traveller and pass the catchment.
     traveller = q2r.Traveller(catchment)
     # Write the control vector to file with a call to the Traveller's getVector method
-    model = q2r.RORB()
+    model = q2r.WBNM()
     with open(os.path.join(dirname, 'vector.cat' if isinstance(model, q2r.RORB) else 'runfile.wbn'), 'w') as f:
         f.write(traveller.getVector(model))
     
