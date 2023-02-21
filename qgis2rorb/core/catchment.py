@@ -55,7 +55,7 @@ class Catchment:
         and subsequently the direction of flow  
         """
         for k, conf in enumerate(self._vertices):  
-            if conf.getType() == 1:
+            if conf.type == 1:
                 if conf.isOut():
                     self._out = k
                     break

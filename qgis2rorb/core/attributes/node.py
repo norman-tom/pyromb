@@ -6,11 +6,14 @@ class Node(Point):
         self._name: str = name
         self._type: int = type
 
-    def setName(self, name: str):
+    @property
+    def name(self) -> str:
+        return self._name
+    
+    @name.setter
+    def name(self, name: str):
        self._name = name
 
-    def getName(self) -> str:
-        return self._name
-
-    def getType(self):
+    @property
+    def type(self):
         return self._type

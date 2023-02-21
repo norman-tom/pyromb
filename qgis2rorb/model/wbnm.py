@@ -5,28 +5,45 @@ from qgis2rorb.core.attributes.confluence import Confluence
 
 class WBNM(Model):
     def __init__(self):
-        self.values = {"VERSION_NUMBER": "test",
-                       "NUMBER_OF_SUBAREAS": "undefined"}
-        self._subAreas = []
+        self.values = {"VERSION_NUMBER": "0.1",
+                       "NONLIN_EXP": 0.77,
+                       "LAG_PARAM": 1.3,
+                       "IMP_LAG_FACT": 0.1,
+                       "DISCHARGE_SWITCH": -99,
+                       "STREAM_ROUTING_TYPE": "#####ROUTING",
+                       "STREAM_LAG_FACTOR": 1}
+        self._subAreas: list[SubArea] = []
 
     def getVector(self, traveller: Traveller):
         self._subAreaFactory(traveller)
         return \
-            self._createCodeBlock("preamble") + self._createCodeBlock("status") + \
-            self._createCodeBlock("display") + self._createCodeBlock("topology")
+            self._createCodeBlock("preamble")   + \
+            self._createCodeBlock("status")     + \
+            self._createCodeBlock("display")    + \
+            self._createCodeBlock("topology")   + \
+            self._createCodeBlock("surface")    + \
+            self._createCodeBlock("flowpaths")  + \
+            self._createCodeBlock("local_structures")  + \
+            self._createCodeBlock("outlet_structures")  + \
+            self._createCodeBlock("storm")
 
     def _subAreaFactory(self, traveller: Traveller):
-        traveller.nextAbsolute()
+        # go to the very top of the catchment.
+        traveller.next()
+        # Traverse the catchment an build each subarea
         while(traveller.position() != traveller._endSentinel):
             if isinstance(traveller.getNode(traveller.position()), Basin):
                 subArea = SubArea(traveller.getNode(traveller.position()))
                 subArea.bottomCoordinate = traveller.getNode(traveller.down(traveller.position())).coordinates()
-                subArea.streamChannel = traveller.position() != traveller.nextAbsolute()
+                subArea.streamChannel = len(traveller.up(traveller.position())) != 0
                 subArea.dsNodeIndex = self._getDsIndex(traveller, traveller.position())
                 self._subAreas.append(subArea)
-            traveller.next()
-
-        ### TODO Need to loop through subarea again and attached the DS index with a concrete SubArea. 
+            traveller.nextAbsolute()
+        for s in self._subAreas:
+            if s.dsNodeIndex == traveller._endSentinel:
+                s.dsSubArea = Basin("SINK")
+            else:
+                s.dsSubArea = traveller.getNode(s.dsNodeIndex)
 
     def _getDsIndex(self, traveller: Traveller, i: int):
         """
@@ -76,24 +93,34 @@ class WBNM(Model):
             return self._blockDisplay() + "\n\n\n"
         if blockName == "topology":
             return self._blockTopology() + "\n\n\n"
+        if blockName == "surface":
+            return self._blockSurface() + "\n\n\n"
+        if blockName == "flowpaths":
+            return self._blockFlowPaths() + "\n\n\n"
+        if blockName == "local_structures":
+            return self._blockLocalStructures() + "\n\n\n"
+        if blockName == "outlet_structures":
+            return self._blockOutletStructures() + "\n\n\n"
+        if blockName == "storm":
+            return self._blockStorm()
     
-
     def _blockPreamble(self):
         """
         Get the PREAMBLE_BLOCK, content is optional so not implementing at this stage
         """
         return \
         "#####START_PREAMBLE_BLOCK##########|###########|###########|###########|\n" + \
+        "\n" * 8 + \
         "#####END_PREAMBLE_BLOCK############|###########|###########|###########|"
     
     def _blockStatus(self):
         """
         Get the STATUS_BLOCK, only implementing required value blocks
         """
-        if self.values["VERSION_NUMBER"] == "undefined": raise ValueError("VERSION_NUMBER must be defined")
         return \
         "#####START_STATUS_BLOCK############|###########|###########|###########|\n" + \
-        f"{self._createValueBlock(self.values['VERSION_NUMBER'])}\n " + \
+        "\n" * 3 + \
+        f"{self._createValueBlock(self.values['VERSION_NUMBER'])}\n" + \
         "#####END_STATUS_BLOCK##############|###########|###########|###########|"
     
     def _blockDisplay(self):
@@ -102,6 +129,7 @@ class WBNM(Model):
         """
         return \
         "#####START_DISPLAY_BLOCK###########|###########|###########|###########|\n" + \
+        "\n" * 2 + \
         "#####END_DISPLAY_BLOCK#############|###########|###########|###########|"
     
     def _blockTopology(self):
@@ -110,15 +138,56 @@ class WBNM(Model):
         """
         insertSubArea = ""
         for s in self._subAreas:
-            insertSubArea += self._createValueBlock(s.getName()) + \
+            insertSubArea += self._createValueBlock(s.name) + \
             self._createValueBlock(round(s.coordinates()[0], 3)) + self._createValueBlock(round(s.coordinates()[1], 3)) + \
             self._createValueBlock(0) + self._createValueBlock(0) + \
-            self._createValueBlock("bob") + "\n"
+            self._createValueBlock(s.dsSubArea.name) + "\n"
         return \
         "#####START_TOPOLOGY_BLOCK###########|###########|###########|###########|\n" + \
         f"{self._createValueBlock(len(self._subAreas))}\n" + \
         f"{insertSubArea}" +\
         "#####END_TOPOLOGY_BLOCK#############|###########|###########|###########|"
+    
+    def _blockSurface(self):
+        insertSurface = ""
+        for s in self._subAreas:
+            insertSurface += f"{self._createValueBlock(s.name)}{self._createValueBlock(round(s.area, 4))}{self._createValueBlock(round(s.fi, 2))}\n"
+        return \
+        "#####START_SURFACES_BLOCK##########|###########|###########|###########|\n" + \
+        f"{self._createValueBlock(self.values['NONLIN_EXP'])}{self._createValueBlock(self.values['LAG_PARAM'])}{self._createValueBlock(self.values['IMP_LAG_FACT'])}\n" + \
+        f"{self._createValueBlock(self.values['DISCHARGE_SWITCH'])}\n" + \
+        insertSurface + \
+        "#####END_SURFACES_BLOCK############|###########|###########|###########|"
+
+    def _blockFlowPaths(self):
+        insertFlow = ""
+        for s in self._subAreas:
+            if s.streamChannel:
+                insertFlow += f"{self._createValueBlock(s.name)}\n" + \
+                    f"{self._createValueBlock(self.values['STREAM_ROUTING_TYPE'])}\n" + \
+                    f"{self._createValueBlock(self.values['STREAM_LAG_FACTOR'])}\n"
+        return \
+        "#####START_FLOWPATHS_BLOCK#########|###########|###########|###########|\n" + \
+        f"{len([x for x in self._subAreas if x.streamChannel])}\n" + \
+        insertFlow + \
+        "#####END_FLOWPATHS_BLOCK###########|###########|###########|###########|"
+    
+    def _blockLocalStructures(self):
+        return \
+        "#####START_LOCAL_STRUCTURES_BLOCK##|###########|###########|###########|\n" + \
+        "0\n" + \
+        "#####END_LOCAL_STRUCTURES_BLOCK####|###########|###########|###########|"
+
+    def _blockOutletStructures(self):
+       return \
+       "#####START_OUTLET_STRUCTURES_BLOCK#|###########|###########|###########|\n" + \
+       "0\n" + \
+       "#####END_OUTLET_STRUCTURES_BLOCK###|###########|###########|###########|"
+
+    def _blockStorm(self):
+        return \
+        "#####START_STORM_BLOCK#############|###########|###########|###########|\n" + \
+        "#####END_STORM_BLOCK###############|###########|###########|###########|"
     
 class SubArea(Basin):
     """

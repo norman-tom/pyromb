@@ -55,14 +55,14 @@ class RORB(Model):
         
         if i == traveller._endSentinel:
             return(0, i)
-        elif (self._runningHydro == False) and (traveller._catchment._vertices[i].getType() == 0):
+        elif (self._runningHydro == False) and (traveller._catchment._vertices[i].type() == 0):
             self._runningHydro = True
             traveller.next()
             return (1, i)
         elif (self._storedHydro) and (self._storedHydro[-1] == i) and (self._runningHydro):
             self._storedHydro.pop()
             return (4, i)
-        elif (self._runningHydro) and (traveller._catchment._vertices[i].getType() == 0) and (up == i):
+        elif (self._runningHydro) and (traveller._catchment._vertices[i].type() == 0) and (up == i):
             traveller.next()
             return (2, i)
         elif (self._runningHydro) and (up != i):
@@ -70,7 +70,7 @@ class RORB(Model):
             self._runningHydro = False
             traveller.next()
             return (3, i)
-        elif (self._runningHydro) and (traveller._catchment._vertices[i].getType() == 1) and (up == i):
+        elif (self._runningHydro) and (traveller._catchment._vertices[i].type() == 1) and (up == i):
             traveller.next()
             return (5, i)
     

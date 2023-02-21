@@ -12,15 +12,19 @@ class Basin(Node):
 
     def __str__(self):
         return "Name: {}\n[{}, {}]\nArea: {}".format(self._name, self._x, self._y, self._area)    
+
+    @property
+    def area(self) -> float:
+        return self._area
     
-    def setArea(self, km2):
+    @area.setter
+    def area(self, km2: float):
         self._area = km2
     
-    def setFI(self, fi):
-        self._fi = fi
-
-    def getArea(self) -> float:
-        return self._area
-
-    def getFI(self) -> float:
+    @property
+    def fi(self) -> float:
         return self._fi
+    
+    @fi.setter
+    def fi(self, fi: float):
+        self._fi = fi

@@ -79,28 +79,30 @@ class Traveller:
         This will return the next upstream node within the catchment available from the current node position. 
         If the node position is on a confluence _next() will return that node before going up the next reach.
         """
-        up = self.top(self._pos)
-        if up == self._pos:
+        top = self.top(self._pos)
+        if top == self._pos:
             self._colour[self._pos] = 1
             self._pos = self.down(self._pos)
             return self._pos
         else:
-            self._pos = up
+            self._pos = top
             return self._pos
         
     def nextAbsolute(self) -> int:
         """
-        This will return the next upper most node availabe from the current position.
-        _nextAbsolute() ignores the nodes at confluences if it can reach a higher node and returns the higher node.
+        This will return the next upper most node availabe from the current highest position.
+        Unlike next, nextAbsolute assumes a starting position that is a highest node. A single call to next() must occur 
+        at the begining of the traversal to ensure that the traveller is at the top of the catchment. 
+        nextAbsolute() ignores the nodes at confluences if it can reach a higher node and returns the higher node.
         """
-        up = self.top(self._pos)
-        if up == self._pos:
-            self._colour[self._pos] = 1
-            self._pos = self.down(self._pos)
-            return up
+        self._colour[self._pos] = 1
+        self._pos = self.down(self._pos)
+        top = self.top(self._pos)
+        if top == self._pos:
+            return self._pos
         else:
-            self._pos = up
-            return self.next()
+            self._pos = top
+            return self._pos
 
     def getVector(self, model: Model):
         """
