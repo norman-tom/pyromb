@@ -1,9 +1,9 @@
 from .node import Node
 
 class Basin(Node):
-    def __init__(self, name: str = "", x: float = 0, y: float = 0, km2: float = 0.0, fi: float = 0.0) -> None:
+    def __init__(self, name: str = "", x: float = 0, y: float = 0, area: float = 0.0, fi: float = 0.0) -> None:
         super().__init__(name, x, y)
-        self._area: float = km2
+        self._area: float = area
         self._fi: float = fi
         self._type = 0
         """
@@ -18,8 +18,8 @@ class Basin(Node):
         return self._area
     
     @area.setter
-    def area(self, km2: float):
-        self._area = km2
+    def area(self, area: float):
+        self._area = area
     
     @property
     def fi(self) -> float:
