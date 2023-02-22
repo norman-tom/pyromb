@@ -4,6 +4,10 @@ from qgis2rorb.core.attributes.basin import Basin
 from qgis2rorb.core.attributes.confluence import Confluence
 
 class WBNM(Model):
+    """
+    The WBNM class creates a templated runfile based on a catchment diagram produced in GIS.
+    Only basic functionality is supported at this stage. Storm and Structure blocks will need to be manually entered. 
+    """
     def __init__(self):
         self.values = {"VERSION_NUMBER": "0.1",
                        "NONLIN_EXP": 0.77,

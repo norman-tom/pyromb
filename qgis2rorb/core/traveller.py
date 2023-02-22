@@ -106,7 +106,7 @@ class Traveller:
 
     def getVector(self, model: Model):
         """
-        Ask to produce the vector from the chosen hydrology model. 
-        Returns a correctly formated control vector for either a RORB or WBNM model.  
+        Produce the vector for the desired hydrology model. Supports either RORB or WBNM.
+        Returns a correctly formated control vector for RORB or a runfile WBNM.  
         """
         return model.getVector(self)
