@@ -155,7 +155,7 @@ class WBNM(Model):
     def _blockSurface(self):
         insertSurface = ""
         for s in self._subAreas:
-            insertSurface += f"{self._createValueBlock(s.name)}{self._createValueBlock(round(s.area, 4))}{self._createValueBlock(round(s.fi, 2))}\n"
+            insertSurface += f"{self._createValueBlock(s.name)}{self._createValueBlock(round(s.area * 100, 2))}{self._createValueBlock(round(s.fi, 2))}\n"
         return \
         "#####START_SURFACES_BLOCK##########|###########|###########|###########|\n" + \
         f"{self._createValueBlock(self.values['NONLIN_EXP'])}{self._createValueBlock(self.values['LAG_PARAM'])}{self._createValueBlock(self.values['IMP_LAG_FACT'])}\n" + \
