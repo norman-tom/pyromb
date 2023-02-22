@@ -35,7 +35,7 @@ def plot_catchment(connected, tr, tc, tb):
     for i, n in enumerate(tc):
         nodeNames.append("{}[{}]".format(n.name, i))
     for i, b in enumerate(tb):
-        nodeNames.append("{}[{}]".format(b.name, i+12))
+        nodeNames.append("{}[{}]".format(b.name, i + len(cname)))
         
     fig, ax = plt.subplots()
     im = ax.imshow(connected[0])
