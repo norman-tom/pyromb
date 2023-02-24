@@ -9,7 +9,8 @@ class WBNM(Model):
     Only basic functionality is supported at this stage. Storm and Structure blocks will need to be manually entered. 
     """
     def __init__(self):
-        self.values = {"VERSION_NUMBER": "0.1",
+        self.values = {"VERSION_NUMBER": "2021_000",
+                       "CATCHMENT_NAME": "Catchment",
                        "NONLIN_EXP": 0.77,
                        "LAG_PARAM": 1.3,
                        "IMP_LAG_FACT": 0.1,
@@ -62,7 +63,7 @@ class WBNM(Model):
                 return traveller._endSentinel
         return self._getDsIndex(traveller, ds)
             
-    def _createValueBlock(self, value: str) -> str:
+    def _createValueBlock(self, value) -> str:
         """
         Create a value block for insertions into a code block.
         Value blocks are a single value defined in the Runfile specification. \n
@@ -70,12 +71,17 @@ class WBNM(Model):
         would make up a single value block, and is part of the 'TOPOLOGY_BLOCK'. The value block is 12 characters wide with space padding.  
         """
         try:
-            value = str(value)
-        except:
-            ValueError("cant cast to string")
-        if len(value) > 12:
-            raise ValueError(f"Maximum string length is 12 characters, but {value} was {len(value)}")
-        return value.ljust(12, ' ')
+            string = str(value)
+            if len(string) > 12:
+                raise ValueError(f"Maximum string length is 12 characters, but {value} was {len(value)}")
+        except ValueError:
+            raise ValueError("cannot parse argument into a string")
+        if isinstance(value, float) or isinstance(value, int):
+            return string.rjust(12, ' ')
+        elif isinstance(string, str):
+            return string.ljust(12, ' ')
+        else:
+            raise ValueError("value must be a string or float")
     
     def _createCodeBlock(self, blockName: str):
         """
@@ -133,7 +139,9 @@ class WBNM(Model):
         """
         return \
         "#####START_DISPLAY_BLOCK###########|###########|###########|###########|\n" + \
-        "\n" * 2 + \
+        f"{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}\n" + \
+        f"{self._createValueBlock('none')}\n" + \
+        f"{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}\n" + \
         "#####END_DISPLAY_BLOCK#############|###########|###########|###########|"
     
     def _blockTopology(self):
@@ -145,10 +153,10 @@ class WBNM(Model):
             insertSubArea += self._createValueBlock(s.name) + \
             self._createValueBlock(round(s.coordinates()[0], 3)) + self._createValueBlock(round(s.coordinates()[1], 3)) + \
             self._createValueBlock(0) + self._createValueBlock(0) + \
-            self._createValueBlock(s.dsSubArea.name) + "\n"
+            " " + self._createValueBlock(s.dsSubArea.name) + "\n"
         return \
         "#####START_TOPOLOGY_BLOCK###########|###########|###########|###########|\n" + \
-        f"{self._createValueBlock(len(self._subAreas))}\n" + \
+        f"{self._createValueBlock(len(self._subAreas))} {self._createValueBlock(self.values['CATCHMENT_NAME'])}\n" + \
         f"{insertSubArea}" +\
         "#####END_TOPOLOGY_BLOCK#############|###########|###########|###########|"
     
@@ -191,6 +199,34 @@ class WBNM(Model):
     def _blockStorm(self):
         return \
         "#####START_STORM_BLOCK#############|###########|###########|###########|\n" + \
+        f"{self._createValueBlock(1)}\n" + \
+        "#####START_STORM#1\n" + \
+        "1%AEP dura/patt spectrum  - losses 27/4 GLOBAL - ARF = Calculated from ARR\n" + \
+        f"{self._createValueBlock(1.0)}\n" + \
+        f"{self._createValueBlock(5.0)}\n" + \
+        "#####START_DESIGN_RAIN_ARR\n" + \
+        f"{self._createValueBlock(1.0)}{self._createValueBlock(-1)}{self._createValueBlock(-1)}{self._createValueBlock(-1)}\n" + \
+        "IFD_DATA_IN_GAUGE_FILES\n" + \
+        f"{self._createValueBlock(2)}\n" + \
+        "sorell_lower\n" + \
+        "sorell_upper\n" + \
+        "PAT_DATA_IN_REGION_FILE\n" + \
+        "sorell_increments.csv\n" + \
+        "CAT_DATA_IN_CATCHMENT_FILE\n" + \
+        "sorell_catchment_data.txt\n" + \
+        "#####END_DESIGN_RAIN_ARR\n" + \
+        "#####START_CALC_RAINGAUGE_WEIGHTS\n" + \
+        "#####END_CALC_RAINGAUGE_WEIGHTS\n" + \
+        "#####START_LOSS_RATES\n" + \
+        f"{self._createValueBlock('GLOBAL')}{self._createValueBlock(27.0)}{self._createValueBlock(4.0)}{self._createValueBlock(0.0)}\n" + \
+        "#####END_LOSS_RATES\n" + \
+        "#####START_RECORDED_HYDROGRAPHS\n" + \
+        f"{self._createValueBlock(0)}\n" + \
+        "#####END_RECORDED_HYDROGRAPHS\n" + \
+        "#####START_IMPORTED_HYDROGRAPHS\n" + \
+        f"{self._createValueBlock(0)}\n" + \
+        "#####END_IMPORTED_HYDROGRAPHS\n" + \
+        "#####END_STORM#1\n" + \
         "#####END_STORM_BLOCK###############|###########|###########|###########|"
     
 class SubArea(Basin):
