@@ -2,6 +2,8 @@ from qgis2rorb.model.model import Model
 from qgis2rorb.core.traveller import Traveller
 from qgis2rorb.core.attributes.basin import Basin
 from qgis2rorb.core.attributes.confluence import Confluence
+from qgis2rorb.core.geometry.point import Point
+import numpy as np
 
 class WBNM(Model):
     """
@@ -35,20 +37,22 @@ class WBNM(Model):
     def _subAreaFactory(self, traveller: Traveller):
         # go to the very top of the catchment.
         traveller.next()
-        # Traverse the catchment an build each subarea
+        # Traverse the catchment and build each subarea.
         while(traveller.position() != traveller._endSentinel):
             if isinstance(traveller.getNode(traveller.position()), Basin):
                 subArea = SubArea(traveller.getNode(traveller.position()))
-                subArea.bottomCoordinate = traveller.getNode(traveller.down(traveller.position())).coordinates()
                 subArea.streamChannel = len(traveller.up(traveller.position())) != 0
                 subArea.dsNodeIndex = self._getDsIndex(traveller, traveller.position())
                 self._subAreas.append(subArea)
             traveller.nextAbsolute()
         for s in self._subAreas:
             if s.dsNodeIndex == traveller._endSentinel:
-                s.dsSubArea = Basin("SINK")
+                node = traveller.getNode(traveller.getStart())
+                s.dsSubArea = SubArea(Basin("SINK"))
+                s.out = Point(node.coordinates()[0], node.coordinates()[1])
             else:
-                s.dsSubArea = traveller.getNode(s.dsNodeIndex)
+                s.dsSubArea = self._getDSSubArea(traveller, s.dsNodeIndex)
+                s.out = self._getOutCoordinate(s)
 
     def _getDsIndex(self, traveller: Traveller, i: int):
         """
@@ -62,6 +66,38 @@ class WBNM(Model):
             if traveller.getNode(ds).isOut() == True:
                 return traveller._endSentinel
         return self._getDsIndex(traveller, ds)
+
+    def _getDSSubArea(self, traveller: Traveller, index):
+        node = traveller.getNode(index)
+        name = node.name
+        for s in self._subAreas:
+            if s.name == name:
+                return s
+    
+    def _getOutCoordinate(self, subarea) -> Point:
+        """
+        Returns the out location of the sub area. 
+        The out location is the scaled vector between the two subarea centroids.
+        Scaling of the vector is based on the ratio of subarea sizes.
+        Matrx X =   |x2, x1|
+                    |y2, y1|
+
+        Vector a =  |alpha |
+                    |-alpha|
+        alpha = area1 / (area1 + area2)
+        where: area1 and area2 are the areas of the subArea and downstream subarea respoectively. 
+        """
+        # Build X and a
+        x1, y1 = subarea.centroid()
+        x2, y2 = subarea.dsSubArea.centroid()
+        a1 = subarea.area
+        a2 = subarea.dsSubArea.area
+        X = np.array([[x2, x1], [y2, y1]])
+        a = np.array([a1 / (a1 + a2), -a1 / (a1 + a2)])
+        # Calculate the out location between the basins. 
+        co = (X @ a) + X[:, 1]
+        # Return the location as a point
+        return Point(co[0], co[1])
             
     def _createValueBlock(self, value) -> str:
         """
@@ -152,7 +188,7 @@ class WBNM(Model):
         for s in self._subAreas:
             insertSubArea += self._createValueBlock(s.name) + \
             self._createValueBlock(round(s.coordinates()[0], 3)) + self._createValueBlock(round(s.coordinates()[1], 3)) + \
-            self._createValueBlock(0) + self._createValueBlock(0) + \
+            self._createValueBlock(round(s.out.coordinates()[0], 3)) + self._createValueBlock(round(s.out.coordinates()[1], 3)) + \
             " " + self._createValueBlock(s.dsSubArea.name) + "\n"
         return \
         "#####START_TOPOLOGY_BLOCK###########|###########|###########|###########|\n" + \
@@ -228,7 +264,7 @@ class WBNM(Model):
         "#####END_IMPORTED_HYDROGRAPHS\n" + \
         "#####END_STORM#1\n" + \
         "#####END_STORM_BLOCK###############|###########|###########|###########|"
-    
+
 class SubArea(Basin):
     """
     SubArea as defined by the WBNM specification, is a subcatchment of the basin which generates a hydrograph and routes 
@@ -239,65 +275,76 @@ class SubArea(Basin):
         self._y:float = basin._y
         self._type: int = basin._type
         self._name: str = basin._name
-        self._bottomCoordinate: tuple
+        self._out: Point
         self._streamChannel: bool
         self._area: float = basin._area
         self._fi: float = basin._fi
         self._dsNodeIndex: int
         self._dsSubArea: SubArea
 
-        @property
-        def centroid(self) -> tuple:
-            return (self._x, self._y)
-        
-        @centroid.setter
-        def centroid(self, value: tuple):
-            self._centroid = value
+    @property
+    def x(self) -> tuple:
+        return self._x
+    
+    @x.setter
+    def x(self, value: tuple):
+        self._x = value
 
-        @property
-        def bottomCoordinate(self) -> tuple:
-            return self._bottomCoordinate
-        
-        @bottomCoordinate.setter
-        def bottomCoordinate(self, value: tuple):
-            self._bottomCoordinate = value
+    @property
+    def y(self) -> tuple:
+        return self._y
+    
+    @y.setter
+    def y(self, value: tuple):
+        self._y = value
 
-        @property
-        def streamChannel(self) -> bool:
-            return self._streamChannel
-        
-        @streamChannel.setter
-        def streamChannel(self, value: bool):
-            self._streamChannel = value
+    @property
+    def out(self) -> Point:
+        return self._out
+    
+    @out.setter
+    def out(self, value: Point):
+        self._out = value
 
-        @property
-        def area(self) -> float:
-            return self._area
-        
-        @area.setter
-        def area(self, value: float):
-            self._area = value
+    @property
+    def streamChannel(self) -> bool:
+        return self._streamChannel
+    
+    @streamChannel.setter
+    def streamChannel(self, value: bool):
+        self._streamChannel = value
 
-        @property
-        def fractionImp(self) -> float:
-            return self._fi
-        
-        @fractionImp.setter
-        def fractionImp(self, value: float):
-            self._fi = value
+    @property
+    def area(self) -> float:
+        return self._area
+    
+    @area.setter
+    def area(self, value: float):
+        self._area = value
 
-        @property
-        def dsNodeIndex(self) -> SubArea:
-            return self._dsSubArea
-        
-        @dsNodeIndex.setter
-        def dsNodeIndex(self, subarea: int):
-            self._dsNodeIndex = subarea
+    @property
+    def fractionImp(self) -> float:
+        return self._fi
+    
+    @fractionImp.setter
+    def fractionImp(self, value: float):
+        self._fi = value
 
-        @property
-        def dsSubArea(self) -> SubArea:
-            return self._dsSubArea
-        
-        @dsSubArea.setter
-        def dsSubArea(self, subarea: SubArea):
-            self._dsSubArea = subarea
+    @property
+    def dsNodeIndex(self):
+        return self._dsNodeIndex
+    
+    @dsNodeIndex.setter
+    def dsNodeIndex(self, subarea: int):
+        self._dsNodeIndex = subarea
+
+    @property
+    def dsSubArea(self):
+        return self._dsSubArea
+    
+    @dsSubArea.setter
+    def dsSubArea(self, subarea):
+        self._dsSubArea = subarea
+
+    def centroid(self):
+        return (self.x, self.y)
