@@ -4,8 +4,8 @@ from plot_catchment import plot_catchment
 
 def main():
     ### Config ###
-    plot = False # Set True of you want the catchment to be plotted
-    model = q2r.WBNM() # Select your hydrology model, either q2r.RORB() or q2r.WBNM()
+    plot = True # Set True of you want the catchment to be plotted
+    model = q2r.RORB() # Select your hydrology model, either q2r.RORB() or q2r.WBNM()
 
     ### Main ###
     dirname = os.path.dirname(__file__)

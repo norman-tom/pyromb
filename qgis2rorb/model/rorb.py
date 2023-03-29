@@ -55,14 +55,14 @@ class RORB(Model):
         
         if i == traveller._endSentinel:
             return(0, i)
-        elif (self._runningHydro == False) and (traveller._catchment._vertices[i].type() == 0):
+        elif (self._runningHydro == False) and (traveller._catchment._vertices[i].type == 0):
             self._runningHydro = True
             traveller.next()
             return (1, i)
         elif (self._storedHydro) and (self._storedHydro[-1] == i) and (self._runningHydro):
             self._storedHydro.pop()
             return (4, i)
-        elif (self._runningHydro) and (traveller._catchment._vertices[i].type() == 0) and (up == i):
+        elif (self._runningHydro) and (traveller._catchment._vertices[i].type == 0) and (up == i):
             traveller.next()
             return (2, i)
         elif (self._runningHydro) and (up != i):
@@ -70,7 +70,7 @@ class RORB(Model):
             self._runningHydro = False
             traveller.next()
             return (3, i)
-        elif (self._runningHydro) and (traveller._catchment._vertices[i].type() == 1) and (up == i):
+        elif (self._runningHydro) and (traveller._catchment._vertices[i].type == 1) and (up == i):
             traveller.next()
             return (5, i)
     
@@ -97,7 +97,7 @@ class RORB(Model):
         areaStr = ""
         for c in code:
             if (c[0] == 1) or (c[0] == 2):
-                areaStr += "{},".format(round(traveller._catchment._vertices[c[1]].getArea(), 6))
+                areaStr += "{},".format(round(traveller._catchment._vertices[c[1]].area, 6))
         areaStr += '-99'
         return areaStr
     
@@ -105,6 +105,6 @@ class RORB(Model):
         fStr = "1,"
         for c in code:
             if (c[0] == 1) or (c[0] == 2):
-                fStr += "{},".format(round(traveller._catchment._vertices[c[1]].getFI(), 3))
+                fStr += "{},".format(round(traveller._catchment._vertices[c[1]].fi, 3))
         fStr += '-99'
         return fStr
