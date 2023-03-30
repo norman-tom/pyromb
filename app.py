@@ -10,7 +10,10 @@ def main():
     ### Main ###
     dirname = os.path.dirname(__file__)
     # Call the builder and pass it the shape files. Shape files live in the ./data directory. 
-    builder = q2r.Builder(os.path.join(dirname, 'data', 'reachs.shp'), os.path.join(dirname, 'data', 'basins.shp'), os.path.join(dirname, 'data', 'centroids.shp'), os.path.join(dirname, 'data', 'confluences.shp'))
+    builder = q2r.Builder(os.path.join(dirname, 'data', 'reaches.shp'), 
+                          os.path.join(dirname, 'data', 'basins.shp'), 
+                          os.path.join(dirname, 'data', 'centroids.shp'), 
+                          os.path.join(dirname, 'data', 'confluences.shp'))
     # Build each element
     tr = builder.reach()
     tc = builder.confluence()
