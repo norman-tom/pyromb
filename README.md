@@ -1,15 +1,7 @@
 # QGIS2RORB
 Author: Tom Norman
 
-For now, have a look at 'app.py' for use.</br>
-Most of the lines are to plot the catchment to visually check it is being built correctly.
-
-You need to:
-1. Build the confluences, basins and reaches with the Builder
-2. Create the catchment from the elements returned from the calls to Builder
-3. Call connect on the catchment, will build the catchment. Represented as US and DS Incidence Matrices.
-4. Create the Traveller who will traverse the catchment and figure out what codes are to be called at each point. 
-5. call Traveller.getVector to return a string of the RORB control vector.
+Please look under documentation for a user guide on how to get started.
 
 ## GIS Shape Files
 ### Reaches:
