@@ -1,6 +1,3 @@
-from shutil import ReadError
-
-from matplotlib.cbook import Stack
 from qgis2rorb.core.attributes.basin import Basin
 from qgis2rorb.core.attributes.confluence import Confluence
 from qgis2rorb.core.attributes.node import Node

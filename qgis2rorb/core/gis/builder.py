@@ -2,7 +2,7 @@ import shapefile as sf
 from qgis2rorb.core.attributes.basin import Basin
 from qgis2rorb.core.attributes.confluence import Confluence
 from qgis2rorb.core.attributes.reach import Reach
-from qgis2rorb.core.geometry.line import Line, pointVector
+from qgis2rorb.core.geometry.line import pointVector
 from qgis2rorb.core.geometry.point import Point
 from qgis2rorb.math import geometry
 
