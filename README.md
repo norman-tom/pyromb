@@ -30,7 +30,7 @@ These are the location where reaches meet, which isn't a centroid (no basin info
 'id' The name of the confluence [string]  
 'out' Flag whether this confluence is the out [integer]  
 
-![Catchment Overview](https://github.com/norman-tom/gisrom/documentation/catchment_overview.png?raw=true)
+![Catchment Overview](https://github.com/norman-tom/gisrom/blob/main/documentation/catchment_overview.png)
 
 1.	Basins are built in the preferred manner. There are various ways to produce the sub-catchments boundaries, please refer to your typical workflow to do so. These are nothing more than polygons that represent the boundaries of your subcatchments. 
 2.	Centroids are created from the basins, either using the in-built centroid tool in QGIS or estimating the location. Centroids represent a sub-area in the RORB Model. These don’t have the be at the centroid, these can be moved to suit the reaches. 
