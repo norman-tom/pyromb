@@ -1,5 +1,5 @@
 from .line import Line
-from qgis2rorb.math import geometry
+from gisrom.math import geometry
 
 class Polygon(Line):
     def __init__(self, vector:list = []):

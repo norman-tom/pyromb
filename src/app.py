@@ -1,18 +1,18 @@
 import os
-import qgis2rorb as q2r
+import gisrom
 from plot_catchment import plot_catchment
 import shapefile as sf
 
 DIR = os.path.dirname(__file__)
-REACH_PATH = os.path.join(DIR, 'data', 'reaches.shp')
-BASIN_PATH = os.path.join(DIR, 'data', 'basins.shp')
-CENTROID_PATH = os.path.join(DIR, 'data', 'centroids.shp')
-CONFUL_PATH = os.path.join(DIR, 'data', 'confluences.shp')
+REACH_PATH = os.path.join(DIR, '../data', 'reaches.shp')
+BASIN_PATH = os.path.join(DIR, '../data', 'basins.shp')
+CENTROID_PATH = os.path.join(DIR, '../data', 'centroids.shp')
+CONFUL_PATH = os.path.join(DIR, '../data', 'confluences.shp')
 
-class SFVectorLayer(sf.Reader, q2r.VectorLayer):
+class SFVectorLayer(sf.Reader, gisrom.VectorLayer):
     """
     Reading the shapefile with the pyshp library.
-    Wrap the shapefile.Reader with the necessary interface
+    Wrap the shapefile.Reader() with the necessary interface
     to work with the builder. 
     """
     def __init__(self, path) -> None:
@@ -30,7 +30,7 @@ class SFVectorLayer(sf.Reader, q2r.VectorLayer):
 def main():
     ### Config ###
     plot = True # Set True of you want the catchment to be plotted
-    model = q2r.RORB() # Select your hydrology model, either q2r.RORB() or q2r.WBNM()
+    model = gisrom.RORB() # Select your hydrology model, either q2r.RORB() or q2r.WBNM()
 
     ### Build Catchment Objects ###
     # Vector layers 
@@ -39,21 +39,21 @@ def main():
     centroid_vector = SFVectorLayer(CENTROID_PATH)
     confluence_vector = SFVectorLayer(CONFUL_PATH)
     # Create the builder. 
-    builder = q2r.Builder()
+    builder = gisrom.Builder()
     # Build each element as per the vector layer.
     tr = builder.reach(reach_vector)
     tc = builder.confluence(confluence_vector)
     tb = builder.basin(centroid_vector, basin_vector)
     
     ### Create the catchment ### 
-    catchment = q2r.Catchment(tc, tb, tr)
+    catchment = gisrom.Catchment(tc, tb, tr)
     connected = catchment.connect()
     # Create the traveller and pass the catchment.
-    traveller = q2r.Traveller(catchment)
+    traveller = gisrom.Traveller(catchment)
     
     ### Write ###
     # Control vector to file with a call to the Traveller's getVector method
-    with open(os.path.join(DIR, 'vector.cat' if isinstance(model, q2r.RORB) else 'runfile.wbn'), 'w') as f:
+    with open(os.path.join(DIR, '../vector.cat' if isinstance(model, gisrom.RORB) else '../runfile.wbn'), 'w') as f:
         f.write(traveller.getVector(model))
     
     ### Plot the catchment ###.

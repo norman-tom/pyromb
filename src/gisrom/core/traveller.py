@@ -1,8 +1,8 @@
 import numpy as np
-from qgis2rorb.core.attributes.reach import Reach
-from qgis2rorb.core.attributes.node import Node
-from qgis2rorb.core.catchment import Catchment
-from qgis2rorb.model.model import Model
+from gisrom.core.attributes.reach import Reach
+from gisrom.core.attributes.node import Node
+from gisrom.core.catchment import Catchment
+from gisrom.model.model import Model
 
 class Traveller:
     def __init__(self, catchment: Catchment):

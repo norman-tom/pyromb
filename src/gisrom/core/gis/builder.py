@@ -1,10 +1,10 @@
-from qgis2rorb.core.attributes.basin import Basin
-from qgis2rorb.core.attributes.confluence import Confluence
-from qgis2rorb.core.attributes.reach import Reach
-from qgis2rorb.core.geometry.line import pointVector
-from qgis2rorb.core.geometry.point import Point
-from qgis2rorb.core.gis.vector_layer import VectorLayer
-from qgis2rorb.math import geometry
+from gisrom.core.attributes.basin import Basin
+from gisrom.core.attributes.confluence import Confluence
+from gisrom.core.attributes.reach import Reach
+from gisrom.core.geometry.line import pointVector
+from gisrom.core.geometry.point import Point
+from gisrom.core.gis.vector_layer import VectorLayer
+from gisrom.math import geometry
 
 class Builder():
     def reach(self, reach: VectorLayer) -> list:

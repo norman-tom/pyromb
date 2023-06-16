@@ -1,5 +1,5 @@
 from .point import Point
-from qgis2rorb.math import geometry
+from gisrom.math import geometry
 
 class Line():
     def __init__(self, vector:list = []):

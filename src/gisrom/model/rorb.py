@@ -1,5 +1,5 @@
-from qgis2rorb.model.model import Model
-from qgis2rorb.core.traveller import Traveller
+from gisrom.model.model import Model
+from gisrom.core.traveller import Traveller
 
 class RORB(Model):
     '''

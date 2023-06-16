@@ -1,8 +1,8 @@
-from qgis2rorb.core.attributes.basin import Basin
-from qgis2rorb.core.attributes.confluence import Confluence
-from qgis2rorb.core.attributes.node import Node
-from qgis2rorb.core.attributes.reach import Reach
-from qgis2rorb.math import geometry
+from gisrom.core.attributes.basin import Basin
+from gisrom.core.attributes.confluence import Confluence
+from gisrom.core.attributes.node import Node
+from gisrom.core.attributes.reach import Reach
+from gisrom.math import geometry
 import numpy as np
 
 class Catchment:

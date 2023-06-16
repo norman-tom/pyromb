@@ -1,8 +1,8 @@
-from qgis2rorb.model.model import Model
-from qgis2rorb.core.traveller import Traveller
-from qgis2rorb.core.attributes.basin import Basin
-from qgis2rorb.core.attributes.confluence import Confluence
-from qgis2rorb.core.geometry.point import Point
+from gisrom.model.model import Model
+from gisrom.core.traveller import Traveller
+from gisrom.core.attributes.basin import Basin
+from gisrom.core.attributes.confluence import Confluence
+from gisrom.core.geometry.point import Point
 import numpy as np
 
 class WBNM(Model):

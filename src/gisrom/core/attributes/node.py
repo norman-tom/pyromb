@@ -1,4 +1,4 @@
-from qgis2rorb.core.geometry.point import Point
+from gisrom.core.geometry.point import Point
 
 class Node(Point):
     def __init__(self, name: str = "", x: float = 0.0, y: float = 0.0, type: int = 0) -> None:
