@@ -1,32 +1,62 @@
 import os
 import qgis2rorb as q2r
 from plot_catchment import plot_catchment
+import shapefile as sf
+
+DIR = os.path.dirname(__file__)
+REACH_PATH = os.path.join(DIR, 'data', 'reaches.shp')
+BASIN_PATH = os.path.join(DIR, 'data', 'basins.shp')
+CENTROID_PATH = os.path.join(DIR, 'data', 'centroids.shp')
+CONFUL_PATH = os.path.join(DIR, 'data', 'confluences.shp')
+
+class SFVectorLayer(sf.Reader, q2r.VectorLayer):
+    """
+    Reading the shapefile with the pyshp library.
+    Wrap the shapefile.Reader with the necessary interface
+    to work with the builder. 
+    """
+    def __init__(self, path) -> None:
+        super().__init__(path)
+
+    def geometry(self, i) -> list:
+        return self.shape(i).points
+    
+    def record(self, i) -> dict:
+        return super().record(i)
+    
+    def __len__(self) -> int:
+        return super().__len__()
 
 def main():
     ### Config ###
     plot = True # Set True of you want the catchment to be plotted
     model = q2r.RORB() # Select your hydrology model, either q2r.RORB() or q2r.WBNM()
 
-    ### Main ###
-    dirname = os.path.dirname(__file__)
-    # Call the builder and pass it the shape files. Shape files live in the ./data directory. 
-    builder = q2r.Builder(os.path.join(dirname, 'data', 'reaches.shp'), 
-                          os.path.join(dirname, 'data', 'basins.shp'), 
-                          os.path.join(dirname, 'data', 'centroids.shp'), 
-                          os.path.join(dirname, 'data', 'confluences.shp'))
-    # Build each element
-    tr = builder.reach()
-    tc = builder.confluence()
-    tb = builder.basin()
-    # Create a catchment and call connect. 
+    ### Build Catchment Objects ###
+    # Vector layers 
+    reach_vector = SFVectorLayer(REACH_PATH)
+    basin_vector = SFVectorLayer(BASIN_PATH)
+    centroid_vector = SFVectorLayer(CENTROID_PATH)
+    confluence_vector = SFVectorLayer(CONFUL_PATH)
+    # Create the builder. 
+    builder = q2r.Builder()
+    # Build each element as per the vector layer.
+    tr = builder.reach(reach_vector)
+    tc = builder.confluence(confluence_vector)
+    tb = builder.basin(centroid_vector, basin_vector)
+    
+    ### Create the catchment ### 
     catchment = q2r.Catchment(tc, tb, tr)
     connected = catchment.connect()
     # Create the traveller and pass the catchment.
     traveller = q2r.Traveller(catchment)
-    # Write the control vector to file with a call to the Traveller's getVector method
+    
+    ### Write ###
+    # Control vector to file with a call to the Traveller's getVector method
     with open(os.path.join(dirname, 'vector.cat' if isinstance(model, q2r.RORB) else 'runfile.wbn'), 'w') as f:
         f.write(traveller.getVector(model))
-    #Plot the data to make sure it is correct.
+    
+    ### Plot the catchment ###.
     if plot: plot_catchment(connected, tr, tc, tb)
 
 if (__name__ == "__main__"):
