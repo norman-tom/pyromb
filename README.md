@@ -15,23 +15,23 @@ If installing for the QGIS Runoff Model plugin, install the library through QGIS
 ## Setting Up A Catchment
 GR uses four shapefiles to provide the necessary information to build the RORB and WBNM vector. These include:
 ### Reaches:
-Reaches are the river connection between basins and confluences. These are a line geometry type.
+Reaches are the river connection between basins and confluences. These are a line geometry type.  
 **Attributes**:  
 'id' - The name of the reach [string]  
 's' - The slope of the reach [double]. Is ignored for natural reaches.  
 't' - Type of reach. Refer to RORB Manual Table 2-2. Only type 1 channels are implemented so far. [integer].  
 Note: reach length is derived from the shapefile geometry.  
 ### Centroids
-Centroids are the centre of the basin, These are not necessarily the centroid however and can be moved to match the reach. However, centroid to basin matching is done through the nearest neighbour, so in rare circumstances, if a centroid is moved too far away from the basin’s true centroid, it may match with another basin, or not match at all. Centroids are a point geometry type.  
+Centroids are the centre of the basin, These are not necessarily the centroid however and can be moved to match the reach. However, centroid to basin matching is done through the nearest neighbour, so in rare circumstances, if a centroid is moved too far away from the basin’s true centroid, it may match with another basin, or not match at all. Centroids are a point geometry type.   
 **Attributes**:  
 'id' The name of the basin [string]  
 'fi' The fraction impervious (this is NOT percentage) [decimal]  
 ### Basins
-Basins are only necessary to provide the centroid with an area. This was done to avoid having to transcribe area information into the Centroid shapefile as an attribute. Basin shapefiles do not need any attributes. Basins are a polygon geometry type.
+Basins are only necessary to provide the centroid with an area. This was done to avoid having to transcribe area information into the Centroid shapefile as an attribute. Basin shapefiles do not need any attributes. Basins are a polygon geometry type.  
 **Attributes**:  
 None  
 ### Confluences
-These are the location where reaches meet, which isn't a centroid (no basin information associated). In the future, these will represent other features like storage.
+These are the location where reaches meet, which isn't a centroid (no basin information associated). In the future, these will represent other features like storage.  
 **Attributes**:  
 'id' The name of the confluence [string]  
 'out' Flag whether this confluence is the out [integer]  
