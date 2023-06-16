@@ -13,7 +13,7 @@ The GISROM (GR) library builds both RORB[1] and WBNM[2] model input files from E
 If installing for the QGIS Runoff Model plugin, install the library through QGIS python consol to ensure it is installed in your QGIS python path. 
 
 ## Setting Up A Catchment
-GR uses four shapefiles to provide the necessary information to build the RORB and WBNM vector. These include:
+GR uses four shapefiles to provide the necessary information to build the RORB and WBNM vector. These are detailed below, note the attributes that must be present in the shapefile so that GR has can build the control files. The easiest way to ensure the necessary attributes are present is to use the example shapefiles in the data folder. 
 ### Reaches:
 Reaches are the river connection between basins and confluences. These are a line geometry type.  
 **Attributes**:  
