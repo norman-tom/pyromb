@@ -53,7 +53,7 @@ def main():
     
     ### Write ###
     # Control vector to file with a call to the Traveller's getVector method
-    with open(os.path.join(dirname, 'vector.cat' if isinstance(model, q2r.RORB) else 'runfile.wbn'), 'w') as f:
+    with open(os.path.join(DIR, 'vector.cat' if isinstance(model, q2r.RORB) else 'runfile.wbn'), 'w') as f:
         f.write(traveller.getVector(model))
     
     ### Plot the catchment ###.
