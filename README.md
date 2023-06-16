@@ -1,10 +1,16 @@
 # GIS Runoff Model Builder (GISROM)
 Author: Tom Norman
 
-The GISROM library builds both RORB[1] and WBNM[2] model input files from ESRI shapefiles typically generated through a GIS package. This library's primary reason for existing is for use within the QGIS plugins Runoff Model: RORB and Runoff Model: WBNM[3]
+The GISROM (GR) library builds both RORB[1] and WBNM[2] model input files from ESRI shapefiles typically generated through a GIS package. This library's primary reason for existing is for use within the QGIS plugins Runoff Model: RORB and Runoff Model: WBNM[3]
 
 1. https://www.harc.com.au/software/rorb/
 2. https://wbnm.com.au/
+
+## Installing
+
+    $ pip install gisrom
+    
+If installing for the QGIS Runoff Model plugin, install the library through QGIS python consol to ensure it is installed in your QGIS python path. 
 
 ## Setting Up A Catchment
 GR uses four shapefiles to provide the necessary information to build the RORB and WBNM vector. These include:
