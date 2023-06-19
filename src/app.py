@@ -1,5 +1,5 @@
 import os
-import gisrom
+import pyromb
 from plot_catchment import plot_catchment
 import shapefile as sf
 
@@ -9,9 +9,8 @@ BASIN_PATH = os.path.join(DIR, '../data', 'basins.shp')
 CENTROID_PATH = os.path.join(DIR, '../data', 'centroids.shp')
 CONFUL_PATH = os.path.join(DIR, '../data', 'confluences.shp')
 
-class SFVectorLayer(sf.Reader, gisrom.VectorLayer):
+class SFVectorLayer(sf.Reader, pyromb.VectorLayer):
     """
-    Reading the shapefile with the pyshp library.
     Wrap the shapefile.Reader() with the necessary interface
     to work with the builder. 
     """
@@ -30,7 +29,7 @@ class SFVectorLayer(sf.Reader, gisrom.VectorLayer):
 def main():
     ### Config ###
     plot = True # Set True of you want the catchment to be plotted
-    model = gisrom.RORB() # Select your hydrology model, either q2r.RORB() or q2r.WBNM()
+    model = pyromb.RORB() # Select your hydrology model, either q2r.RORB() or q2r.WBNM()
 
     ### Build Catchment Objects ###
     # Vector layers 
@@ -39,21 +38,21 @@ def main():
     centroid_vector = SFVectorLayer(CENTROID_PATH)
     confluence_vector = SFVectorLayer(CONFUL_PATH)
     # Create the builder. 
-    builder = gisrom.Builder()
+    builder = pyromb.Builder()
     # Build each element as per the vector layer.
     tr = builder.reach(reach_vector)
     tc = builder.confluence(confluence_vector)
     tb = builder.basin(centroid_vector, basin_vector)
     
     ### Create the catchment ### 
-    catchment = gisrom.Catchment(tc, tb, tr)
+    catchment = pyromb.Catchment(tc, tb, tr)
     connected = catchment.connect()
     # Create the traveller and pass the catchment.
-    traveller = gisrom.Traveller(catchment)
+    traveller = pyromb.Traveller(catchment)
     
     ### Write ###
     # Control vector to file with a call to the Traveller's getVector method
-    with open(os.path.join(DIR, '../vector.cat' if isinstance(model, gisrom.RORB) else '../runfile.wbn'), 'w') as f:
+    with open(os.path.join(DIR, '../vector.cat' if isinstance(model, pyromb.RORB) else '../runfile.wbn'), 'w') as f:
         f.write(traveller.getVector(model))
     
     ### Plot the catchment ###.

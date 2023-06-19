@@ -1,4 +1,4 @@
-from gisrom.core.geometry.line import Line
+from ..geometry.line import Line
 
 class Reach(Line):
     def __init__(self, name: str = "", vector: list = [], type: int = 0, slope: float = 0.0):

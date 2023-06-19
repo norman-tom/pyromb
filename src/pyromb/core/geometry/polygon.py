@@ -1,5 +1,5 @@
 from .line import Line
-from gisrom.math import geometry
+from math import geometry
 
 class Polygon(Line):
     def __init__(self, vector:list = []):

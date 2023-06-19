@@ -1,5 +1,5 @@
-from gisrom.model.model import Model
-from gisrom.core.traveller import Traveller
+from .model import Model
+from ..core.traveller import Traveller
 
 class RORB(Model):
     '''

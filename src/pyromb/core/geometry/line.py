@@ -1,5 +1,5 @@
 from .point import Point
-from gisrom.math import geometry
+from ...math import geometry
 
 class Line():
     def __init__(self, vector:list = []):

@@ -6,5 +6,5 @@ class Point:
     def __str__(self):
         return "[{}, {}]".format(self._x, self._y)
     
-    def coordinates(self) -> tuple[float, float]:
+    def coordinates(self) -> tuple:
         return (self._x, self._y) 

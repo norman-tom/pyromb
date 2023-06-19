@@ -1,5 +1,5 @@
 import math
-from gisrom.core.geometry.point import Point
+from ..core.geometry.point import Point
 
 def length(vertices:list):
     length = 0

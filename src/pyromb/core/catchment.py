@@ -1,16 +1,15 @@
-from gisrom.core.attributes.basin import Basin
-from gisrom.core.attributes.confluence import Confluence
-from gisrom.core.attributes.node import Node
-from gisrom.core.attributes.reach import Reach
-from gisrom.math import geometry
+from .attributes.basin import Basin
+from .attributes.confluence import Confluence
+from .attributes.node import Node
+from .attributes.reach import Reach
+from ..math import geometry
 import numpy as np
 
 class Catchment:
+    """The Catchment is a tree of attributes which describe how water 
+    flows through the model and the entities which act upon it. 
     """
-    The representation of the catchment as an incidence matrix
-  
-    """
-    def __init__(self, confluences: list[Confluence] = [], basins: list[Basin] = [],  reaches: list[Reach] = []) -> None:
+    def __init__(self, confluences: list = [], basins: list = [],  reaches: list = []) -> None:
         self._edges: list[Reach] = reaches
         self._vertices: list[Node] = confluences + basins
         self._incidenceMatrixDS: list = []
@@ -19,12 +18,12 @@ class Catchment:
         self._endSentinel = -1
 
     def connect(self) -> tuple:
-        """
-        Determine which nodes are connected to which reaches.
-        Uses nearest neighbour, k = 1
-        US = 1
-        DS = 2
-        not connected = 0
+        """Connect the individual attributes to create the catchment. 
+
+        Returns
+        -------
+        tuple
+            (Downstream, upstream) incidence matricies of the catchment tree.
         """
         connectionMatrix = np.zeros((len(self._vertices), len(self._edges)), dtype=int)
         for i, edge in enumerate(self._edges):
@@ -46,26 +45,24 @@ class Catchment:
             connectionMatrix[closestStart][i] = 1
             connectionMatrix[closestEnd][i] = 2   
 
-        """
-        Find the 'out' node
-        Used to determine the starting point of breath first search
-        and subsequently the direction of flow  
-        """
+        
+        # Find the 'out' node
+        # Used to determine the starting point of breath first search
+        # And subsequently the direction of flow  
         for k, conf in enumerate(self._vertices):  
             if conf.type == 1:
                 if conf.isOut():
                     self._out = k
                     break
         
-        """
-        Determine incidence matrix relating reaches to nodes and map downstream direction between elements
-        Matrix I (m * m - 1)
-        m = nodes
-        n = reaches
-        value of m n =  the index of the downstream node
-        Think about I as relating upstream nodes (m) to downstream nodes (m n) through reach (n) 
-        (m n) of -1 indicates no downstream node for relationship m n
-        """
+        
+        # Determine incidence matrix relating reaches to nodes and map downstream direction between elements
+        # Matrix I (m * m - 1)
+        # m = nodes
+        # n = reaches
+        # value of m n =  the index of the downstream node
+        # Think about I as relating upstream nodes (m) to downstream nodes (m n) through reach (n) 
+        # (m n) of -1 indicates no downstream node for relationship m n
         newIncidenceDS = np.zeros((len(self._vertices), len(self._edges)), dtype=int)
         newIncidenceDS.fill(self._endSentinel)
         newIncidenceUS = newIncidenceDS.copy()

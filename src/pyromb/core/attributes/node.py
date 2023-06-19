@@ -1,4 +1,4 @@
-from gisrom.core.geometry.point import Point
+from ..geometry.point import Point
 
 class Node(Point):
     def __init__(self, name: str = "", x: float = 0.0, y: float = 0.0, type: int = 0) -> None:

@@ -1,8 +1,8 @@
-from gisrom.model.model import Model
-from gisrom.core.traveller import Traveller
-from gisrom.core.attributes.basin import Basin
-from gisrom.core.attributes.confluence import Confluence
-from gisrom.core.geometry.point import Point
+from .model import Model
+from ..core.traveller import Traveller
+from ..core.attributes.basin import Basin
+from ..core.attributes.confluence import Confluence
+from ..core.geometry.point import Point
 import numpy as np
 
 class WBNM(Model):
