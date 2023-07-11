@@ -1,0 +1,13 @@
+[project]
+name = "pyromb"
+version = "0.1"
+authors = [ 
+    { name="Tom Norman", email="tom@normcosystems.com" }
+]
+description = ""
+readme = "README.md"
+requires-python = ">=3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
