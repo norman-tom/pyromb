@@ -1,26 +1,27 @@
 # Runoff Model Builder (pyromb)
 Author: Tom Norman
 
-The Pyrom (PR) library builds both RORB[1] and WBNM[2] model input files from ESRI shapefiles typically generated through a GIS package. This library's primary reason for existing is for use within the QGIS plugins **Runoff Model: RORB** and **Runoff Model: WBNM**
+The Pyromb (PR) library builds both RORB[1] and WBNM[2] model input files from ESRI shapefiles typically generated through a GIS package. This library's primary reason for existing is for use within the QGIS plugins **Runoff Model: RORB** and **Runoff Model: WBNM**
 
 1. https://www.harc.com.au/software/rorb/
 2. https://wbnm.com.au/
 
 ## Installing
+### Installing python package 
 
     $ pip install pyromb
     
 ### Installing for the QGIS Runoff Model Builder plugin:
-For MacOS or Linux, QGIS does not have its own python environment so pyromb can be installed through pip directly from the terminal.  
+For MacOS or Linux, QGIS does not have its own python environment so PR can be installed through pip directly from the terminal by using the command above.  
   
-For Windows, QGIS has its own python environment. To install pyromb to work with QGIS, it needs to be installed via the OSGeo4W shell.  
+For Windows, QGIS has its own python environment. To install PR to work with QGIS, it needs to be installed via the OSGeo4W shell.  
 1. Open the OSGeo4W Shell (may need admin permission)
 2. Enter **py3_env**
 3. Install via pip
 ###
     $ python -m pip install pyromb
 
-### Installing Runoff Model Builder Plugin
+### Installing the QGIS Runoff Model Builder Plugin
 1. Install PR first
 2. Open QGIS Plugin Manager, search for **Runoff Model: RORB** and install
 3. Runoff Model: RORB is a processing plugin and is located in the processing toolbox under **Runoff Model**
