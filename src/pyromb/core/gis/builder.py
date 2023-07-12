@@ -1,6 +1,7 @@
 from ..attributes.basin import Basin
 from ..attributes.confluence import Confluence
 from ..attributes.reach import Reach
+from ..attributes.reach import ReachType
 from ..geometry.line import pointVector
 from ..geometry.point import Point
 from ..gis.vector_layer import VectorLayer
@@ -12,10 +13,11 @@ class Builder():
 
     The Builder is responsible for creating the entities (geometry, attributes) that 
     the catchment will be built from. Building must take place before the 
-    catchment is connected and traverse. 
+    catchment is connected and traversed. 
 
     The objects returned from the Builder are to be passed to the Catcment. 
     """
+    
     def reach(self, reach: VectorLayer) -> list:
         """Build the reach objects.
 
@@ -34,7 +36,7 @@ class Builder():
         for i in range(len(reach)):
             s = reach.geometry(i)
             r = reach.record(i)
-            reaches.append(Reach(r['id'], s, r['t'], r['s']))    
+            reaches.append(Reach(r['id'], s, ReachType(r['t']), r['s']))    
         return reaches
 
     def basin(self, centroid: VectorLayer, basin: VectorLayer) -> list:
@@ -78,7 +80,7 @@ class Builder():
         Parameters
         ----------
         confluence : VectorLayer
-            The vector layour the confluences are on. 
+            The vector layer the confluences are on. 
 
         Returns
         -------

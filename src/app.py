@@ -28,7 +28,7 @@ class SFVectorLayer(sf.Reader, pyromb.VectorLayer):
 
 def main():
     ### Config ###
-    plot = True # Set True of you want the catchment to be plotted
+    plot = False # Set True of you want the catchment to be plotted
     model = pyromb.RORB() # Select your hydrology model, either q2r.RORB() or q2r.WBNM()
 
     ### Build Catchment Objects ###

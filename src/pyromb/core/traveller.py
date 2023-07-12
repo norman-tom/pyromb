@@ -8,13 +8,18 @@ class Traveller:
     """The Traveller walks through the catchment, proceeding from the very most upstream
     basin to the outfall location. 
 
-    The walk is performed in a breath first manner processing all the upstream catchments
+    The walk is performed in a breadth first manner processing all the upstream catchments
     first, then walking down till it finds a confluence and jumps back up to the most
-    upstream sub basin. So that RORB can be built correctly, the traveller will pause on
-    a confluence before proceeding to the next upstream reach. This allows for a save step
-    to be performed in the RORB model. WBNM does not require such a step and this itermediate 
-    step is ignored.
+    upstream sub-basin. So that RORB can be built correctly, the traveller has the option to 
+    pause on the confluence before proceeding to the next upstream reach. This allows for a 
+    save step to be performed in the RORB model. WBNM does not require such a step.
+    
+    Parameters
+    ----------
+    catchment : Catchment
+        A connected catchment to traverse.
     """
+
     def __init__(self, catchment: Catchment):
         self._catchment: Catchment = catchment
         self._colour = np.zeros(len(catchment._incidenceMatrixDS), dtype=int)

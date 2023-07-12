@@ -22,7 +22,7 @@ def plot_catchment(connected, tr, tc, tb):
         for p in r:
             x.append(p.coordinates()[0])
             y.append(p.coordinates()[1])
-        plt.plot(x, y, label=r.getName())
+        plt.plot(x, y, label=r.name)
     plt.scatter(cx, cy)
     plt.scatter(bx, by)
     plt.legend(loc="upper left")
@@ -30,7 +30,7 @@ def plot_catchment(connected, tr, tc, tb):
         plt.annotate(n, (x, y), (x + 10, y + 10))
     for n, x, y in zip(bname, bx, by):
         plt.annotate(n, (x, y), (x + 10, y + 10))
-    reachNames = [r.getName() for r in tr]
+    reachNames = [r.name for r in tr]
     nodeNames = []
     for i, n in enumerate(tc):
         nodeNames.append("{}[{}]".format(n.name, i))

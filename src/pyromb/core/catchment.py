@@ -6,9 +6,19 @@ from ..math import geometry
 import numpy as np
 
 class Catchment:
-    """The Catchment is a tree of attributes which describe how water 
+    """The Catchment is a tree of attributes which describes how water 
     flows through the model and the entities which act upon it. 
+
+    Parameters
+    ----------
+    confluences : list[Confluence]
+        The Confluences in the catchment
+    basins : list[Basin]
+        The Basins in the catchment
+    reaches: list[Reach]
+        The Reaches in the catchment
     """
+
     def __init__(self, confluences: list = [], basins: list = [],  reaches: list = []) -> None:
         self._edges: list[Reach] = reaches
         self._vertices: list[Node] = confluences + basins
@@ -23,8 +33,9 @@ class Catchment:
         Returns
         -------
         tuple
-            (Downstream, upstream) incidence matricies of the catchment tree.
+            (downstream, upstream) incidence matricies of the catchment tree.
         """
+        
         connectionMatrix = np.zeros((len(self._vertices), len(self._edges)), dtype=int)
         for i, edge in enumerate(self._edges):
             s = edge.getStart()
@@ -50,8 +61,8 @@ class Catchment:
         # Used to determine the starting point of breath first search
         # And subsequently the direction of flow  
         for k, conf in enumerate(self._vertices):  
-            if conf.type == 1:
-                if conf.isOut():
+            if isinstance(conf, Confluence):
+                if conf.isOut:
                     self._out = k
                     break
         

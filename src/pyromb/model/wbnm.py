@@ -6,10 +6,13 @@ from ..core.geometry.point import Point
 import numpy as np
 
 class WBNM(Model):
+    """The WBNM class creates a templated runfile based on a catchment 
+    diagram produced in GIS.
+
+    Only basic functionality is supported at this stage. Storm and 
+    Structure blocks will need to be manually entered. 
     """
-    The WBNM class creates a templated runfile based on a catchment diagram produced in GIS.
-    Only basic functionality is supported at this stage. Storm and Structure blocks will need to be manually entered. 
-    """
+
     def __init__(self):
         self.values = {"VERSION_NUMBER": "2021_000",
                        "CATCHMENT_NAME": "Catchment",
@@ -35,6 +38,17 @@ class WBNM(Model):
             self._createCodeBlock("storm")
 
     def _subAreaFactory(self, traveller: Traveller):
+        """Produces a WBNM subarea.
+
+        A subarea in WBNM is the main structure of the model, this method 
+        produces them from the catchment.
+
+        Parameters
+        ----------
+        traveller : Traveller
+            The traveller traversing this catchment.
+        """
+        
         # go to the very top of the catchment.
         traveller.next()
         # Traverse the catchment and build each subarea.
@@ -55,10 +69,10 @@ class WBNM(Model):
                 s.out = self._getOutCoordinate(s)
 
     def _getDsIndex(self, traveller: Traveller, i: int):
-        """
-        Get the index of the downstream subarea from the current position i.
+        """Get the index of the downstream subarea from the current position i.
         Confluence are not considered subareas in WBNM and will be passed over. 
         """
+
         ds = traveller.down(i)
         if isinstance(traveller.getNode(ds), Basin):
             return ds
@@ -68,6 +82,9 @@ class WBNM(Model):
         return self._getDsIndex(traveller, ds)
 
     def _getDSSubArea(self, traveller: Traveller, index):
+        """Get the downstream subarea corresponding to an index.
+        """
+        
         node = traveller.getNode(index)
         name = node.name
         for s in self._subAreas:
@@ -75,8 +92,8 @@ class WBNM(Model):
                 return s
     
     def _getOutCoordinate(self, subarea) -> Point:
-        """
-        Returns the out location of the sub area. 
+        """ Determine the out co-ordinate of the sub area. 
+
         The out location is the scaled vector between the two subarea centroids.
         Scaling of the vector is based on the ratio of subarea sizes.
         Matrx X =   |x2, x1|
@@ -85,8 +102,10 @@ class WBNM(Model):
         Vector a =  |alpha |
                     |-alpha|
         alpha = area1 / (area1 + area2)
-        where: area1 and area2 are the areas of the subArea and downstream subarea respoectively. 
+        where: area1 and area2 are the areas of the upstream subArea and 
+        downstream subarea respoectively. 
         """
+
         # Build X and a
         x1, y1 = subarea.centroid()
         x2, y2 = subarea.dsSubArea.centroid()
@@ -94,18 +113,22 @@ class WBNM(Model):
         a2 = subarea.dsSubArea.area
         X = np.array([[x2, x1], [y2, y1]])
         a = np.array([a1 / (a1 + a2), -a1 / (a1 + a2)])
+
         # Calculate the out location between the basins. 
         co = (X @ a) + X[:, 1]
+
         # Return the location as a point
         return Point(co[0], co[1])
             
     def _createValueBlock(self, value) -> str:
-        """
-        Create a value block for insertions into a code block.
+        """Create a value block for insertions into a code block.
+        
         Value blocks are a single value defined in the Runfile specification. \n
         For example 'NUMBER_OF_SUBAREAS' 
-        would make up a single value block, and is part of the 'TOPOLOGY_BLOCK'. The value block is 12 characters wide with space padding.  
+        would make up a single value block, and is part of the 'TOPOLOGY_BLOCK'. 
+        The value block is 12 characters wide with space padding.  
         """
+
         try:
             string = str(value)
             if len(string) > 12:
@@ -120,10 +143,9 @@ class WBNM(Model):
             raise ValueError("value must be a string or float")
     
     def _createCodeBlock(self, blockName: str):
-        """
-        A code block is the grouping of values per the Runfile specification.\n
-        For example, the STATUS_BLOCK would include 
-        the lines: \n
+        """A code block is the grouping of values per the Runfile specification.
+
+        For example, the STATUS_BLOCK would include the lines: \n
         #####START_STATUS_BLOCK############|###########|###########|###########|\n
         PATHNAME_NAME_OF_CURRENT_RUNFILE  \n
         DATE_OF_LAST_EDIT                 \n
@@ -131,6 +153,7 @@ class WBNM(Model):
         VERSION_NUMBER FILE_STATUS        \n
         #####END_STATUS_BLOCK##############|###########|###########|###########|\n
         """
+
         if blockName == "preamble":
             return self._blockPreamble() + "\n\n\n"
         if blockName == "status":
@@ -151,18 +174,18 @@ class WBNM(Model):
             return self._blockStorm()
     
     def _blockPreamble(self):
+        """Get the PREAMBLE_BLOCK, content is optional so not implementing at this stage
         """
-        Get the PREAMBLE_BLOCK, content is optional so not implementing at this stage
-        """
+
         return \
         "#####START_PREAMBLE_BLOCK##########|###########|###########|###########|\n" + \
         "\n" * 8 + \
         "#####END_PREAMBLE_BLOCK############|###########|###########|###########|"
     
     def _blockStatus(self):
+        """ Get the STATUS_BLOCK, only implementing required value blocks
         """
-        Get the STATUS_BLOCK, only implementing required value blocks
-        """
+
         return \
         "#####START_STATUS_BLOCK############|###########|###########|###########|\n" + \
         "\n" * 3 + \
@@ -170,9 +193,9 @@ class WBNM(Model):
         "#####END_STATUS_BLOCK##############|###########|###########|###########|"
     
     def _blockDisplay(self):
+        """Get the DISPLAY_BLOCK, display block values are optional, not implementing at this stage
         """
-        Get the DISPLAY_BLOCK, display block values are optional, not implementing at this stage
-        """
+
         return \
         "#####START_DISPLAY_BLOCK###########|###########|###########|###########|\n" + \
         f"{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}\n" + \
@@ -181,9 +204,9 @@ class WBNM(Model):
         "#####END_DISPLAY_BLOCK#############|###########|###########|###########|"
     
     def _blockTopology(self):
+        """Get the TOPOLOGY_BLOCK, only implementing necessary values at this stage. 
         """
-        Get the TOPOLOGY_BLOCK, only implementing necessary values at this stage. 
-        """
+
         insertSubArea = ""
         for s in self._subAreas:
             insertSubArea += self._createValueBlock(s.name) + \
@@ -233,6 +256,11 @@ class WBNM(Model):
        "#####END_OUTLET_STRUCTURES_BLOCK###|###########|###########|###########|"
 
     def _blockStorm(self):
+        """Stormblock is a template at this stage. Catchment specific information will  
+        eventually be injected into this block. This block will require manual configuration in
+        the WBNM runfile. 
+        """
+
         return \
         "#####START_STORM_BLOCK#############|###########|###########|###########|\n" + \
         f"{self._createValueBlock(1)}\n" + \
@@ -266,10 +294,16 @@ class WBNM(Model):
         "#####END_STORM_BLOCK###############|###########|###########|###########|"
 
 class SubArea(Basin):
+    """SubArea as defined by the WBNM specification. 
+    
+    A subclass of  Basin, SubArea is the main object in the WBNM model. The SubArea
+    generates a hydrograph for the SubArea and routes the flow to the downstream 
+    SubArea or to the sink. Refer to WBNM manual for details. 
+
+    SubArea is generated from a Basin retrieved from the catchment. The SubArea has
+    some additional attributes to the Basin used by WBNM.
     """
-    SubArea as defined by the WBNM specification, is a subcatchment of the basin which generates a hydrograph and routes 
-    the flow to the downstream subarea or to the sink. 
-    """
+
     def __init__(self, basin: Basin):
         self._x: float = basin._x
         self._y:float = basin._y
