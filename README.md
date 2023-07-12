@@ -1,19 +1,33 @@
-# GIS Runoff Model Builder (GISROM)
+# Runoff Model Builder (pyromb)
 Author: Tom Norman
 
-The GISROM (GR) library builds both RORB[1] and WBNM[2] model input files from ESRI shapefiles typically generated through a GIS package. This library's primary reason for existing is for use within the QGIS plugins Runoff Model: RORB and Runoff Model: WBNM[3]
+The Pyromb (PR) library builds both RORB[1] and WBNM[2] model input files from ESRI shapefiles typically generated through a GIS package. This library's primary reason for existing is for use within the QGIS plugins **Runoff Model: RORB** and **Runoff Model: WBNM**
 
 1. https://www.harc.com.au/software/rorb/
 2. https://wbnm.com.au/
 
 ## Installing
+### Installing python package 
 
-    $ pip install gisrom
+    $ pip install pyromb
     
-If installing for the QGIS Runoff Model plugin, install the library through QGIS python consol to ensure it is installed in your QGIS python path. 
+### Installing for the QGIS Runoff Model Builder plugin:
+For MacOS or Linux, QGIS does not have its own python environment so PR can be installed through pip directly from the terminal by using the command above.  
+  
+For Windows, QGIS has its own python environment. To install PR to work with QGIS, it needs to be installed via the OSGeo4W shell.  
+1. Open the OSGeo4W Shell (may need admin permission)
+2. Enter **py3_env**
+3. Install via pip
+###
+    $ python -m pip install pyromb
+
+### Installing the QGIS Runoff Model Builder Plugin
+1. Install PR first
+2. Open QGIS Plugin Manager, search for **Runoff Model: RORB** and install
+3. Runoff Model: RORB is a processing plugin and is located in the processing toolbox under **Runoff Model**
 
 ## Setting Up A Catchment
-GR uses four shapefiles to provide the necessary information to build the RORB and WBNM vector. These are detailed below, note the attributes that must be present in the shapefile so that GR has can build the control files. The easiest way to ensure the necessary attributes are present is to use the example shapefiles in the data folder. 
+PR uses four shapefiles to provide the necessary information to build the RORB and WBNM vector. These are detailed below, note the attributes that must be present in the shapefile so that PR has can build the control files. The easiest way to ensure the necessary attributes are present is to use the example shapefiles in the data folder. 
 ### Reaches:
 Reaches are the river connection between basins and confluences. These are a line geometry type.  
 **Attributes**:  
