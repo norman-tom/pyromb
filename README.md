@@ -11,6 +11,10 @@ MiRORB is a similar more advance tool which uses the GIS package MapInfo. The un
 2. https://wbnm.com.au/
 
 ## Installing
+
+### Dependencies
+[Numpy](https://numpy.org/)
+
 ### Installing python package 
 
     $ pip install pyromb
