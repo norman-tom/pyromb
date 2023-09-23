@@ -53,6 +53,7 @@ class Reach(Line):
     def slope(self) -> float:
         return self._slope  
     
+    @slope.setter
     def slope(self, slope: float) -> None:
         self._slope = slope
 
