@@ -97,4 +97,4 @@ In the future, these will represent other features like storage.
 An example of a built catchment can be found in the data folder. 
 
 # Roadmap
-Currently the roadmap is a by needs basis. If there is any functionality of RORB or WBNM that you wish to have implemented, please raise an issue and the squeaky wheel may get the grease.
+Currently working on Pyromb version 0.2 which will build .catg control vector files compatible with the RORB Graphical Editor. This will help immensely with those wanting to build more complicated catchments that need the full functionality of RORB. 
