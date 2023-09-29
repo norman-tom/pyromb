@@ -4,13 +4,23 @@ from ..core.attributes.basin import Basin
 from ..core.attributes.confluence import Confluence
 from ..core.attributes.reach import ReachType
 from .. import resources
+import json
+import os
 
 class VectorBlock():
+    """
+    Builds the vector block for the RORB control file.
+    """
+
     def __init__(self) -> None:
         self._storedHydro: list[int] = []
         self._runningHydro: bool = False
         self._stateVector = []
         self._controlVector = []
+
+        resources_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'resources')
+        with open(os.path.join(resources_dir, 'formatting.json'), 'r') as f:
+            self._formattingOptions = json.load(f)
     
     def step(self, traveller: Traveller) -> None:
         """ Calculate action to take at the current node and store it in the VectorBlock's state.
@@ -41,16 +51,14 @@ class VectorBlock():
             The vector block string to be used on the .catg file 
         """
 
-        vectorStr = resources.rorb.VECTOR_HEADER
+        vectorStr = "0\n"                   # Start with code 0, reach types are specified in the control block.
         for s in self._controlVector:
-            vectorStr += s + "\n"
-        vectorStr += self._subAreaStr(self._stateVector, traveller) + "\n"
-        vectorStr += self._fracImpStr(self._stateVector, traveller) + "\n"
-        
+            vectorStr += f"{s}\n"
+        vectorStr += f"{self._subAreaStr(self._stateVector, traveller)}\n{self._fracImpStr(self._stateVector, traveller)}\n"
         return vectorStr
 
-    def _state(self, traveller: Traveller):
-        """ The current state of the traveller within the catchment.
+    def _state(self, traveller: Traveller) -> None:
+        """ Store the current state of the traveller within the catchment at each time step.
 
         Necessary to know so that the correct control code can be returned.
 
@@ -102,7 +110,7 @@ class VectorBlock():
         
         self._stateVector.append(ret)
         
-    def _control(self, code: tuple, traveller: Traveller) -> str:
+    def _control(self, code: tuple, traveller: Traveller) -> None:
         """Format a control vector string according to the RORB manual Table 5-1 p.52 (version 6)
 
         Parameters
@@ -117,21 +125,22 @@ class VectorBlock():
         traveller : Traveller
             The traveller traversing this catchment
         """
+
         if (code[0] == 1) or (code[0] == 2) or (code[0] == 5):
             try:
                 r = traveller.getReach(code[1])
                 if (r.type == ReachType.NATURAL) or (r.type == ReachType.DROWNED):
-                    ret = "{},{},{},-99".format(code[0], r.type.value, round(r.length() / 1000, 3))
+                    ret = f"{code[0]},{r.type.value},{r.length() / 1000:.3f},-99"
                 else:
-                    ret = "{},{},{},{},-99".format(code[0], r.type.value, round(r.length() / 1000, 3), r.getSlope())
+                    ret = f"{code[0]},{r.type.value},{r.length() / 1000:.3f},{r.getSlope()},-99"
             except:
-                ret = "{}\nout\n{}".format(7, 0)
+                ret = f"{7}\n\n{0}"
         
         if (code[0] == 3) or (code[0] == 4):
-            ret = "{}".format(code[0])
+            ret = f"{code[0]}"
         
         if (code[0] == 0):
-            ret = "{}\nout\n'{}".format(7, 0)
+            ret = f"{7}\n\n'{0}"
         
         self._controlVector.append(ret)
     
@@ -141,7 +150,7 @@ class VectorBlock():
         Parameters
         ----------
         code : list
-            a list of the states acting on the catchment in the order of travel.
+            A list of the states acting on the catchment in the order of travel.
         traveller : Traveller
             The traveller traversing this catchment. 
 
@@ -154,17 +163,53 @@ class VectorBlock():
         areaStr = ""
         for c in code:
             if (c[0] == 1) or (c[0] == 2):
-                areaStr += "{},".format(round(traveller._catchment._vertices[c[1]].area, 6))
+                areaStr += f"{traveller._catchment._vertices[c[1]].area:{self._formattingOptions['area_table']['percision']}},"
         areaStr += '-99'
-        return areaStr
+
+        values = areaStr.split(',')
+        formatted_values = resources.rorb.AREA_TABLE_HEADER
+        for i, val in enumerate(values[:-1]):
+            if (i % 5 == 0) and (i != 0):
+                formatted_values += f"\n{val:{self._formattingOptions['area_table']['column_width']}},"
+            else:
+                formatted_values += f"{val:{self._formattingOptions['area_table']['column_width']}},"
+        formatted_values += f"\n{values[-1]}"
+
+        return formatted_values
     
     def _fracImpStr(self, code: list, traveller: Traveller) -> str:
-        fStr = "1,"
+        """
+        Format the fraction impervious string according to the RORB manual.
+        
+        Parameters
+        ----------
+        code : list
+            A list of the states acting on the catchment in the order of travel.
+        traveller : Traveller
+            The traveller traversing this catchment.
+            
+        Returns
+        -------
+        str
+            A fraction impervious string for the control file.
+        """
+
+        fStr = f"{resources.rorb.FI_TABLE_HEADER} 1,"
         for c in code:
             if (c[0] == 1) or (c[0] == 2):
-                fStr += "{},".format(round(traveller._catchment._vertices[c[1]].fi, 3))
-        fStr += '-99'
-        return fStr
+                fStr += f"{traveller._catchment._vertices[c[1]].fi:{self._formattingOptions['fi_table']['percision']}},"
+        fStr += ' -99'
+
+        values = fStr.split(',')
+        formatted_values = f"{values[0]} ,\n"
+        for i, val in enumerate(values[1:-1]):
+            if (i % 5 == 0) and (i != 0):
+                formatted_values += f"\n{val:{self._formattingOptions['fi_table']['column_width']}},"
+            else:
+                formatted_values += f"{val:{self._formattingOptions['fi_table']['column_width']}},"
+        formatted_values += f"\n{values[-1]}"
+
+        return formatted_values
     
     @property
     def state(self):
@@ -175,6 +220,10 @@ class VectorBlock():
         raise AttributeError('State vector is generated not set')
 
 class GraphicsBlock():
+    """
+    Builds the graphics block for the RORB control file.
+    """
+
     def __init__(self) -> None:
         self._idMap = {}
         self._nodeVector = []
@@ -182,151 +231,232 @@ class GraphicsBlock():
         self._nodeID = self._idGenerator()
         self._reachID = self._idGenerator()
 
+        resources_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'resources')
+        with open(os.path.join(resources_dir, 'formatting.json'), 'r') as f:
+            self._formattingOptions = json.load(f)
+
     def step(self, code: tuple, traveller: Traveller):
+        """
+        Determine graphical information at each catchment position while travelling.
+
+        Parameters
+        ----------
+        code : tuple
+            A tuple containing the code for the graphics block.
+        traveller : Traveller
+            The traveller object which traverse the catchment.
+        """
+
         self._nodeDisplay(code, traveller)
         self._reachDisplay(code, traveller)
     
     def build(self):
-        # Replace ID tags with ID numbers
-        for i, row in enumerate(self._nodeVector):
-            for j, item in enumerate(row):
-                if item in self._idMap:
-                    self._nodeVector[i][j] = self._idMap[item]
+        """Build the graphical block string for the .catg file.
         
-        for i, row in enumerate(self._reachVector):
-            for j, item in enumerate(row):
-                if item in self._idMap:
-                    self._reachVector[i][j] = self._idMap[item]
-                elif item in self._idMap:
-                    self._reachVector[i][j] = self._idMap[item]
+        Returns
+        -------
+        str
+            The graphical block string for the .catg file.
+        """
+
+        self._replaceIDTags(self._nodeVector)
+        self._replaceIDTags(self._reachVector)
+        self._normalizeCoordinates()
+
+        graphicalStr = (
+            f"{resources.rorb.GRAPHICAL_HEADER}"
+            f"{self._generateNodeString()}"
+            f"{resources.rorb.LEADING_TOKEN}\n"
+            f"{self._generateReachString()}"
+            f"{resources.rorb.GRAPHICAL_TAIL}" 
+        )
+
+        return graphicalStr
+
+    def _replaceIDTags(self, vector: list):
+        """
+        Replace the ID tags in the vector with the ID generated by the ID generator.
         
-        # Normalise the co-ordinates
-        xs = [x[1] for x in self._nodeVector]
-        ys = [y[2] for y in self._nodeVector]
+        Parameters
+        ----------
+        vector : list
+            The vector to replace the ID tags in.
+        """
+
+        for i, row in enumerate(vector):
+            for k, v in row.items():
+                if v in self._idMap:
+                    vector[i][k] = self._idMap[v]
+
+    def _normalizeCoordinates(self, scale: float = 90.0, shift: float = 2.5):
+        """
+        Normalize the coordinates of the catchment to fit within the RORB GE window.
+
+        Parameters
+        ----------
+        scale : int
+            The scale factor to apply to the coordinates.
+        """
+
+        xs = [row['x'] for row in self._nodeVector]
+        ys = [row['y'] for row in self._nodeVector]
         scale_x = max(xs) - min(xs)
         scale_y = max(ys) - min(ys)
 
         for i, row in enumerate(self._nodeVector):
-            self._nodeVector[i][1] = (row[1] - min(xs)) / scale_x * 100
-            self._nodeVector[i][2] = (row[2] - min(ys)) / scale_y * 100
-        
+            self._nodeVector[i]['x'] = (row['x'] - min(xs)) / scale_x * scale + shift
+            self._nodeVector[i]['y'] = (row['y'] - min(ys)) / scale_y * scale + shift
+
         for i, row in enumerate(self._reachVector):
-            self._reachVector[i][11] = (row[11] - min(xs)) / scale_x * 100
-            self._reachVector[i][12] = (row[12] - min(ys)) / scale_y * 100
+            self._reachVector[i]['x'] = (row['x'] - min(xs)) / scale_x * scale + shift
+            self._reachVector[i]['y'] = (row['y'] - min(ys)) / scale_y * scale + shift
+    
+    def _generateNodeString(self):
+        """
+        Generates the display information string which is a representation of the node data.
+
+        Returns:
+            A formated display string for the node data, compatible with RORB GE.
+        """
+
+        nodeStr = resources.rorb.NODE_HEADER
+        nodeStr += f"{resources.rorb.LEADING_TOKEN}{len(self._nodeVector):>7}\n"
         
-        nodeStr = ""
         for row in self._nodeVector:
             nodeStr += resources.rorb.LEADING_TOKEN
-            nodeStr  += str(row[0]).rjust(7, " ")
-            nodeStr += str(round(row[1], 3)).rjust(15, " ")
-            nodeStr += str(round(row[2], 3)).rjust(15, " ")
-            nodeStr += ("%.3f" % round(row[3], 3)).rjust(15, " ")
-            nodeStr += str(row[4]).rjust(2, " ")
-            nodeStr += str(row[5]).rjust(2, " ")
-            nodeStr += str(row[6]).rjust(6, " ")
-            nodeStr += " "
-            nodeStr += str(row[7]).ljust(2, " ")
-            nodeStr += ("%.6f" % round(row[8], 6)).rjust(33, " ")
-            nodeStr += ("%.6f" % round(row[9], 6)).rjust(15, " ")
-            nodeStr += str(row[10]).rjust(3, " ")
-            nodeStr += str(row[11]).rjust(3, " ")
-            nodeStr += str(row[12]).rjust(3, " ")
-            nodeStr += '\n' + resources.rorb.LEADING_TOKEN + '\n'
+            for item in row:
+                nodeStr += f"{row[item]:{self._formattingOptions['node'][item]}}" 
+            nodeStr += f"\n{resources.rorb.LEADING_TOKEN}\n"
         
-        reachStr = ""
+        return nodeStr
+    
+    def _generateReachString(self):
+        """
+        Generates the display information string which is a representation of the reach data.
+
+        Returns:
+            A formated display string for the reach data, compatible with RORB GE.
+        """
+
+        reachStr = resources.rorb.REACH_HEADER
+        reachStr += f"{resources.rorb.LEADING_TOKEN}{len(self._reachVector):>7}\n"
+
         for row in self._reachVector:
             reachStr += resources.rorb.LEADING_TOKEN
-            reachStr += str(row[0]).rjust(7, " ")
-            reachStr += " "
-            reachStr += str(row[1]).ljust(8, " ")
-            reachStr += str(row[2]).rjust(18, " ")
-            reachStr += str(row[3]).rjust(6, " ")
-            reachStr += str(row[4]).rjust(15, " ")
-            reachStr += str(row[5]).rjust(2, " ")
-            reachStr += str(row[6]).rjust(2, " ")
-            reachStr += ("%.3f" % round(row[7], 3)).rjust(15, " ")
-            reachStr += ("%.3f" % round(row[8], 3)).rjust(15, " ")
-            reachStr += str(row[9]).rjust(6, " ")
-            reachStr += str(row[10]).rjust(3, " ")
-            reachStr += '\n' + resources.rorb.LEADING_TOKEN
-            reachStr += ("%.3f" % round(row[11], 3)).rjust(16, " ")
-            reachStr += '\n' + resources.rorb.LEADING_TOKEN
-            reachStr += ("%.3f" % round(row[12], 3)).rjust(16, " ")
-            reachStr += '\n'
+            for item in row:
+                if (item == 'x') or (item == 'y'):
+                    reachStr += f"\n{resources.rorb.LEADING_TOKEN}" 
+                reachStr += f"{row[item]:{self._formattingOptions['reach'][item]}}"
+            reachStr += "\n"
 
-        graphicalStr = resources.rorb.GRAPHICAL_HEADER
-        graphicalStr += resources.rorb.NODE_HEADER
-        graphicalStr += resources.rorb.LEADING_TOKEN + " " + str(len(self._nodeVector)) + "\n"
-        graphicalStr += nodeStr
-        
-        graphicalStr += resources.rorb.LEADING_TOKEN + "\n" 
-        graphicalStr += resources.rorb.REACH_HEADER
-        graphicalStr += resources.rorb.LEADING_TOKEN + str(len(self._reachVector)).rjust(7, " ") + "\n"
-        graphicalStr += reachStr
-        graphicalStr += resources.rorb.GRAPHICAL_TAIL
-
-        return graphicalStr
+        return reachStr
 
     def _nodeDisplay(self, code, traveller: Traveller):
+        """
+        Add graphic information for a node to the node vector.
+
+        The node vector holds the ordered information, in order of tranvel, for each node in the catchment.
+
+        Parameters
+        ----------
+        code : tuple
+            A tuple containing the code for the graphics block. Contains position information for the node to be displayed.
+        traveller : Traveller
+            The traveller object which traversed the catchment.
+        """
+
         pos = code[1]
         if (code[0] == 1) or (code[0] == 2) or (code[0] == 5):
             node = traveller.getNode(pos)
-            id = f"<{node.name}>"
-            self._idMap[id] = next(self._nodeID)
             x, y = node.coordinates()
-            icon_size = 1
-            is_basin = int(isinstance(node, Basin))
-            is_end = int(node.isOut) if isinstance(node, Confluence) else 0
-            ds_node = f"<{traveller.getNode(traveller.down(pos)).name}>"
-            name = node.name
-            area = node.area if isinstance(node, Basin) else 0.000
-            fi = node.fi if isinstance(node, Basin) else 0.000
-            prt = 0
-            out_excess = 0
-            has_comment = 0
-            self._nodeVector.append([id, x, y, icon_size, is_basin, is_end, ds_node, name, area, fi, prt, out_excess, has_comment])
+            prnt = 70 if (isinstance(node, Confluence) and node.isOut) else 0
+
+            # Order is important here.
+            data = {
+                'id': f"<{node.name}>",
+                'x': x,
+                'y': y,
+                'icon': 1,
+                'basin': int(isinstance(node, Basin)),
+                'end': int(node.isOut) if isinstance(node, Confluence) else 0,
+                'ds': f"<{traveller.getNode(traveller.down(pos)).name}>",
+                'name': f" {node.name}",                                        # Leading space is important here.
+                'area': node.area if isinstance(node, Basin) else 0,
+                'fi': node.fi if isinstance(node, Basin) else 0,
+                'print': prnt,
+                'excess': 0,
+                'comment': 0
+            }
+
+            self._idMap[data['id']] = next(self._nodeID)
+            self._nodeVector.append(data)
 
     def _reachDisplay(self, code: tuple, traveller: Traveller) -> list:
+        """
+        Add graphic information for a reach to the reach vector.
+        
+        The reach vector holds the ordered information, in order of travel, for each reach in the catchment.
+        
+        Parameters
+        ----------
+        code : tuple
+            A tuple containing the code for the graphics block. Contains position information for the reach to be displayed.
+        traveller : Traveller
+            The traveller object which traversed the catchment.
+        """
+
         pos = code[1]
         if (code[0] == 1) or (code[0] == 2) or (code[0] == 5):
             try:
                 reach = traveller.getReach(pos)
-                id = f"<{reach.name}>"
-                name = reach.name
-                self._idMap[id] = next(self._reachID)
                 ep = reach.getEnd().coordinates()
                 sp = reach.getStart().coordinates()
                 x = (ep[0] - sp[0]) / 2 + sp[0]
                 y = (ep[1] - sp[1]) / 2 + sp[1]
-                us_node = f"<{traveller.getNode(pos).name}>"
-                ds_node = f"<{traveller.getNode(traveller.down(pos)).name}>"
-                translation = 0
-                rtype =reach.type
-                prt = 0
-                ln = reach.length() / 1000
-                slope = reach.slope
-                ngp = 1
-                has_comment = 0
-                self._reachVector.append([id, name, us_node, ds_node, translation, rtype.value, prt, ln, slope, ngp, has_comment, x, y])
+
+                # Order is important here.
+                data = {
+                    'id': f"<{reach.name}>",
+                    'name': f" {reach.name}",                                    # Leading space is important here.
+                    'us': f"<{traveller.getNode(pos).name}>",
+                    'ds': f"<{traveller.getNode(traveller.down(pos)).name}>",
+                    'translation': 0,
+                    'type': reach.type.value,
+                    'print': 0,
+                    'length': reach.length() / 1000,
+                    'slope': reach.slope,
+                    'npoints': 1,
+                    'comment': 0,
+                    'x': x,
+                    'y': y,
+                }
+
+                self._idMap[data['id']] = next(self._reachID)
+                self._reachVector.append(data)
+
             except KeyError:
                 pass
     
     @staticmethod
     def _idGenerator():
+        """
+        Generate a unique ID for each node and reach in the catchment.
+        """
+
         i = 0
         while True:
             i += 1
             yield i
 
 class RORB(Model):
-    """Create a RORB control vector for input to the RORB runoff routing model. 
+    """
+    Create a RORB GE control vector for input to the RORB runoff routing model. 
     """
     
     def __init__(self):
         pass
     
     def getVector(self, traveller: Traveller) -> str:
-        
         traveller.next()
         vectorBlock = VectorBlock()
         graphicBlock = GraphicsBlock()

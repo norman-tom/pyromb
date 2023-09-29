@@ -1,0 +1,40 @@
+{
+    "node": {
+        "id": ">7",
+        "x": ">15.3f",
+        "y": ">15.3f",
+        "icon": ">15.3f",
+        "basin": ">2d",
+        "end": ">2d",
+        "ds": ">6",
+        "name": "<3",
+        "area": ">33.6f",
+        "fi": ">15.6f",
+        "print": ">3d",
+        "excess": ">3d",
+        "comment": ">3d"
+    },
+    "reach": {
+        "id": ">7",
+        "name": "<9",
+        "us": ">18",
+        "ds": ">6",
+        "translation": ">15d",
+        "type": ">2d",
+        "print": ">2d",
+        "length": ">15.3f",
+        "slope": ">15.3f",
+        "npoints": ">6d",
+        "comment": ">3d",
+        "x": ">16.3f",
+        "y": ">16.3f"
+    },
+    "area_table": {
+        "percision": ">.5f",
+        "column_width": ">13"
+    },
+    "fi_table": {
+        "percision": ">.5f",
+        "column_width": ">13"
+    }
+}
