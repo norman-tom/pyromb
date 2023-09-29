@@ -4,3 +4,6 @@ LEADING_TOKEN = "C"
 NODE_HEADER = "C #NODES\n"
 REACH_HEADER = "C #REACHES\n"
 GRAPHICAL_TAIL = "C\nC #STORAGES\nC      0\nC\nC #INFLOW/OUTFLOW\nC      0\nC\nC END RORB_GE\nC\n"
+
+AREA_TABLE_HEADER = "C Sub Area Data\nC Areas, km**2, of subareas A,B...\n"
+FI_TABLE_HEADER = "C Impervious Fraction Data\n"
