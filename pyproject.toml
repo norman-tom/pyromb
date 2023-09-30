@@ -13,13 +13,13 @@ exclude = [
 
 [project]
 name = "pyromb"
-version = "0.1.0"
+version = "0.2.0"
 authors = [ 
     { name="Tom Norman", email="tom@normcosystems.com" }
 ]
 description = "Runoff Model Builder (Pyromb) is a package used for building RORB and WBNM control files from catchment diagrams built from ESRI shapefiles. Its primary use is in the QGIS plugin Runoff Model: RORB and Runoff Model: WBNM"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 
 classifiers = [
     "Programming Language :: Python :: 3",
