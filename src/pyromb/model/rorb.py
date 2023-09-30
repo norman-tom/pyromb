@@ -23,10 +23,11 @@ class VectorBlock():
             self._formattingOptions = json.load(f)
     
     def step(self, traveller: Traveller) -> None:
-        """ Calculate action to take at the current node and store it in the VectorBlock's state.
+        """ 
+        Calculate action to take at the current step and store it in the VectorBlock's state.
         
-        Step is to be used at every update of the Traveller so that the control vector block used 
-        by RORB can be built when traversing the catchment is finished.
+        Step is to be used at every update of the Traveller. The RORB control vector 
+        is then built from the VectorBlock's state after the catchment has been traversed.
 
         Parameters
         ----------
@@ -37,8 +38,9 @@ class VectorBlock():
         self._state(traveller)
         self._control(self._stateVector[-1], traveller)
     
-    def build(self, traveller) -> str:
-        """ Builds the vector block string.
+    def build(self, traveller: Traveller) -> str:
+        """ 
+        Builds the vector block string.
         
         Parameters
         ----------
@@ -48,7 +50,7 @@ class VectorBlock():
         Returns
         -------
         str
-            The vector block string to be used on the .catg file 
+            The vector block string to be used in the .catg file 
         """
 
         vectorStr = "0\n"                   # Start with code 0, reach types are specified in the control block.
@@ -58,30 +60,22 @@ class VectorBlock():
         return vectorStr
 
     def _state(self, traveller: Traveller) -> None:
-        """ Store the current state of the traveller within the catchment at each time step.
+        """
+        Store the current state of the traveller within the catchment at each time step.
 
-        Necessary to know so that the correct control code can be returned.
+        This is necessary to know so that the correct control code can be returned.
 
-        if no running hydrograph and is sub-area:
-            code = 1
-            set running 
-        if node has a stored hydrograph and their is a running hydrograph:
-            code = 4
-            pop storedHydrograph from the stack
-        if running hydrograph and is sub-area and has no visitable other upstream reaches:
-            code = 2
-        if running hydrograph and has other visitable upstream reaches:
-            code = 3
-            push node index onto stored hydrograph stack 
-            set the running hydrograph to zero
-            move the the most upstream point on that reach
-        if running hydrograph and is not a sub-area and does not have upstream and there is nothing stored:
-            code = 5
-        
+        Control codes:
+        - 1: If there is no running hydrograph and the node is a sub-area, set the running hydrograph.
+        - 2: If there is a running hydrograph and the node is a sub-area and has no other visitable upstream reaches.
+        - 3: If there is a running hydrograph and the node has other visitable upstream reaches, push node index onto stored hydrograph stack, set the running hydrograph to zero, and move to the most upstream point on that reach.
+        - 4: If the node has a stored hydrograph and there is a running hydrograph, pop the stored hydrograph from the stack.
+        - 5: If there is a running hydrograph and the node is not a sub-area and does not have upstream and there is nothing stored.
+
         Parameters
         ----------
         traveller : Traveller
-            The traveller traversing this catchment        
+            The traveller traversing this catchment.
         """
 
         i = traveller._pos
@@ -111,22 +105,22 @@ class VectorBlock():
         self._stateVector.append(ret)
         
     def _control(self, code: tuple, traveller: Traveller) -> None:
-        """Format a control vector string according to the RORB manual Table 5-1 p.52 (version 6)
+        """
+        Format a control vector string according to the RORB manual Table 5-1 p.52 (version 6).
 
         Parameters
         ----------
         code : tuple
-            A coded tuple with
+            A coded tuple with:
 
             [0] - The command code.
-
             [1] - The position of the traveller when the command code was created.
 
         traveller : Traveller
-            The traveller traversing this catchment
+            The traveller traversing this catchment.
         """
 
-        if (code[0] == 1) or (code[0] == 2) or (code[0] == 5):
+        if code[0] in (1, 2, 5):
             try:
                 r = traveller.getReach(code[1])
                 if (r.type == ReachType.NATURAL) or (r.type == ReachType.DROWNED):
@@ -145,14 +139,19 @@ class VectorBlock():
         self._controlVector.append(ret)
     
     def _subAreaStr(self, code: tuple, traveller: Traveller) -> str:
-        """Format the subarea string according to the RORB manual
+        """
+        Format the subarea string according to the RORB manual.
 
         Parameters
         ----------
-        code : list
-            A list of the states acting on the catchment in the order of travel.
+        code : tuple
+            A coded tuple with:
+
+            [0] - The command code.
+            [1] - The position of the traveller when the command code was created.
+
         traveller : Traveller
-            The traveller traversing this catchment. 
+            The traveller traversing this catchment.
 
         Returns
         -------
@@ -167,27 +166,28 @@ class VectorBlock():
         areaStr += '-99'
 
         values = areaStr.split(',')
-        formatted_values = resources.rorb.AREA_TABLE_HEADER
-        for i, val in enumerate(values[:-1]):
-            if (i % 5 == 0) and (i != 0):
-                formatted_values += f"\n{val:{self._formattingOptions['area_table']['column_width']}},"
-            else:
-                formatted_values += f"{val:{self._formattingOptions['area_table']['column_width']}},"
-        formatted_values += f"\n{values[-1]}"
+        formatted_values = (
+            f"{resources.rorb.AREA_TABLE_HEADER}"
+            f"{self._makeTable(values, 'area_table')}"
+        )
 
         return formatted_values
     
     def _fracImpStr(self, code: list, traveller: Traveller) -> str:
         """
         Format the fraction impervious string according to the RORB manual.
-        
+
         Parameters
         ----------
-        code : list
-            A list of the states acting on the catchment in the order of travel.
+        code : tuple
+            A coded tuple with:
+
+            [0] - The command code.
+            [1] - The position of the traveller when the command code was created.
+
         traveller : Traveller
             The traveller traversing this catchment.
-            
+
         Returns
         -------
         str
@@ -201,15 +201,39 @@ class VectorBlock():
         fStr += ' -99'
 
         values = fStr.split(',')
-        formatted_values = f"{values[0]} ,\n"
-        for i, val in enumerate(values[1:-1]):
-            if (i % 5 == 0) and (i != 0):
-                formatted_values += f"\n{val:{self._formattingOptions['fi_table']['column_width']}},"
-            else:
-                formatted_values += f"{val:{self._formattingOptions['fi_table']['column_width']}},"
-        formatted_values += f"\n{values[-1]}"
+        formatted_values = (
+            f"{values[0]} ,\n"
+            f"{self._makeTable(values[1:], 'fi_table')}"
+        )
 
         return formatted_values
+    
+    def _makeTable(self, value: list, table: str) -> str:
+        """
+        Format a table string according to the RORB manual.
+
+        Parameters
+        ----------
+        value : list
+            A list of values to be formatted.
+        table : str
+            The name of the table to be formatted.
+
+        Returns
+        -------
+        str
+            A formatted table string for the control file.
+        """
+
+        formatted_values = ""
+        for i, val in enumerate(value[:-1]):
+            if (i % 5 == 0) and (i != 0):
+                formatted_values += f"\n{val:{self._formattingOptions[table]['column_width']}},"
+            else:
+                formatted_values += f"{val:{self._formattingOptions[table]['column_width']}},"
+        formatted_values += f"\n{value[-1]}"
+
+        return formatted_values 
     
     @property
     def state(self):
@@ -235,22 +259,26 @@ class GraphicsBlock():
         with open(os.path.join(resources_dir, 'formatting.json'), 'r') as f:
             self._formattingOptions = json.load(f)
 
-    def step(self, code: tuple, traveller: Traveller):
+    def step(self, code: tuple, traveller: Traveller) -> None:
         """
         Determine graphical information at each catchment position while travelling.
 
         Parameters
         ----------
-        code : tuple
-            A tuple containing the code for the graphics block.
+        code : Tuple[int, int]
+            A coded tuple with:
+
+            [0] - The command code.
+            [1] - The position of the traveller when the command code was created.
+
         traveller : Traveller
-            The traveller object which traverse the catchment.
+            The traveller traversing this catchment.
         """
 
         self._nodeDisplay(code, traveller)
         self._reachDisplay(code, traveller)
     
-    def build(self):
+    def build(self) -> str:
         """Build the graphical block string for the .catg file.
         
         Returns
@@ -273,7 +301,7 @@ class GraphicsBlock():
 
         return graphicalStr
 
-    def _replaceIDTags(self, vector: list):
+    def _replaceIDTags(self, vector: list) -> None:
         """
         Replace the ID tags in the vector with the ID generated by the ID generator.
         
@@ -288,14 +316,16 @@ class GraphicsBlock():
                 if v in self._idMap:
                     vector[i][k] = self._idMap[v]
 
-    def _normalizeCoordinates(self, scale: float = 90.0, shift: float = 2.5):
+    def _normalizeCoordinates(self, scale: float = 90.0, shift: float = 2.5) -> None:
         """
         Normalize the coordinates of the catchment to fit within the RORB GE window.
 
         Parameters
         ----------
-        scale : int
+        scale : float
             The scale factor to apply to the coordinates.
+        shift : float
+            The shift factor to apply to the coordinates.
         """
 
         xs = [row['x'] for row in self._nodeVector]
@@ -311,12 +341,12 @@ class GraphicsBlock():
             self._reachVector[i]['x'] = (row['x'] - min(xs)) / scale_x * scale + shift
             self._reachVector[i]['y'] = (row['y'] - min(ys)) / scale_y * scale + shift
     
-    def _generateNodeString(self):
+    def _generateNodeString(self) -> str:
         """
-        Generates the display information string which is a representation of the node data.
+        Generates the display information string for the nodes.
 
         Returns:
-            A formated display string for the node data, compatible with RORB GE.
+            A formated display string of the node data, compatible with RORB GE.
         """
 
         nodeStr = resources.rorb.NODE_HEADER
@@ -330,12 +360,12 @@ class GraphicsBlock():
         
         return nodeStr
     
-    def _generateReachString(self):
+    def _generateReachString(self) -> str:
         """
-        Generates the display information string which is a representation of the reach data.
+        Generates the display information string for the reaches.
 
         Returns:
-            A formated display string for the reach data, compatible with RORB GE.
+            A formated display string of the reach data, compatible with RORB GE.
         """
 
         reachStr = resources.rorb.REACH_HEADER
@@ -351,27 +381,34 @@ class GraphicsBlock():
 
         return reachStr
 
-    def _nodeDisplay(self, code, traveller: Traveller):
+    def _nodeDisplay(self, code: tuple, traveller: Traveller) -> None:
         """
-        Add graphic information for a node to the node vector.
+        Add display information for a node to the node vector.
 
-        The node vector holds the ordered information, in order of tranvel, for each node in the catchment.
+        The node vector holds the ordered information (in order of travel) for each node in the catchment.
 
         Parameters
         ----------
-        code : tuple
-            A tuple containing the code for the graphics block. Contains position information for the node to be displayed.
+        code : Tuple[int, int]
+            A coded tuple with:
+
+            [0] - The command code.
+            [1] - The position of the node to be displayed.
+
         traveller : Traveller
-            The traveller object which traversed the catchment.
+            The traveller traversing this catchment.
         """
 
         pos = code[1]
-        if (code[0] == 1) or (code[0] == 2) or (code[0] == 5):
+        if code[0] in (1, 2, 5):
             node = traveller.getNode(pos)
             x, y = node.coordinates()
-            prnt = 70 if (isinstance(node, Confluence) and node.isOut) else 0
+            prnt = 70 if isinstance(node, Confluence) and node.isOut else 0
 
-            # Order is important here.
+            ds_node = traveller.getNode(traveller.down(pos))
+            ds_name = f"<{ds_node.name}>"
+            
+            # Order according to the column order in the control vector.
             data = {
                 'id': f"<{node.name}>",
                 'x': x,
@@ -379,8 +416,8 @@ class GraphicsBlock():
                 'icon': 1,
                 'basin': int(isinstance(node, Basin)),
                 'end': int(node.isOut) if isinstance(node, Confluence) else 0,
-                'ds': f"<{traveller.getNode(traveller.down(pos)).name}>",
-                'name': f" {node.name}",                                        # Leading space is important here.
+                'ds': ds_name,
+                'name': f" {node.name}",
                 'area': node.area if isinstance(node, Basin) else 0,
                 'fi': node.fi if isinstance(node, Basin) else 0,
                 'print': prnt,
@@ -391,22 +428,26 @@ class GraphicsBlock():
             self._idMap[data['id']] = next(self._nodeID)
             self._nodeVector.append(data)
 
-    def _reachDisplay(self, code: tuple, traveller: Traveller) -> list:
+    def _reachDisplay(self, code: tuple, traveller: Traveller) -> None:
         """
-        Add graphic information for a reach to the reach vector.
-        
-        The reach vector holds the ordered information, in order of travel, for each reach in the catchment.
-        
+        Add display information for a reach to the reach vector.
+
+        The reach vector holds the ordered information (in order of travel) for each reach in the catchment.
+
         Parameters
         ----------
-        code : tuple
-            A tuple containing the code for the graphics block. Contains position information for the reach to be displayed.
+        code : Tuple[int, int]
+            A coded tuple with:
+
+            [0] - The command code.
+            [1] - The position of the reach to be displayed.
+
         traveller : Traveller
-            The traveller object which traversed the catchment.
+            The traveller traversing this catchment.
         """
 
         pos = code[1]
-        if (code[0] == 1) or (code[0] == 2) or (code[0] == 5):
+        if code[0] in (1, 2, 5):
             try:
                 reach = traveller.getReach(pos)
                 ep = reach.getEnd().coordinates()
@@ -414,10 +455,10 @@ class GraphicsBlock():
                 x = (ep[0] - sp[0]) / 2 + sp[0]
                 y = (ep[1] - sp[1]) / 2 + sp[1]
 
-                # Order is important here.
+                # Order according to the column order in the control vector.
                 data = {
                     'id': f"<{reach.name}>",
-                    'name': f" {reach.name}",                                    # Leading space is important here.
+                    'name': f" {reach.name}",
                     'us': f"<{traveller.getNode(pos).name}>",
                     'ds': f"<{traveller.getNode(traveller.down(pos)).name}>",
                     'translation': 0,
