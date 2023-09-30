@@ -3,7 +3,7 @@ Author: Tom Norman
 
 The Pyromb (PR) library builds both RORB[1] and WBNM[2] model input files from ESRI shapefiles typically generated through a GIS package. This library's primary reason for existing is for use within the QGIS plugins **Runoff Model: RORB** and **Runoff Model: WBNM**
 
-The library as it stands, is a minimal viable implementation of RORB and WBNM control files. It does however solve the primary issue with text file input models, that is, the need to manually transcribe information from GIS to the text file. For more advance models the user is encouraged to modify the RORB and WBNM files directly. 
+The library as it stands, is a minimal viable implementation of RORB and WBNM control files. It does however solve the primary issue with text file input models, that is, the need to manually transcribe information from GIS to the text file or graphical editor. Pyromb is now compatible with the RORB GE, therefore the generated control vector files can be easily modified for more complex catchments. 
 
 MiRORB is a similar more advance tool which uses the GIS package MapInfo. The unavailability of MiRORB for QGIS inspired this project. This library is not however GIS package dependent. Pyromb is a stand alone python package able to be used directly by a python application if necessary. The QGIS plugins developed in conjunction with this project only feeds the shapefiles to this library for processing. As such this library can be used for any GIS software package. 
 
@@ -97,4 +97,4 @@ In the future, these will represent other features like storage.
 An example of a built catchment can be found in the data folder. 
 
 # Roadmap
-Currently working on Pyromb version 0.2 which will build .catg control vector files compatible with the RORB Graphical Editor. This will help immensely with those wanting to build more complicated catchments that need the full functionality of RORB. 
+Slowly implementing additional functionality of RORB as I need.
