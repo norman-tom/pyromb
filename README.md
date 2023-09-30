@@ -23,6 +23,13 @@ MiRORB is a similar more advance tool which uses the GIS package MapInfo. The un
 For **MacOS or Linux**, QGIS does not have its own python environment so PR can be installed through pip directly from the terminal by using the command above.  
 
 For **Windows**, QGIS has its own python environment. To install PR to work with QGIS, it needs to be installed via the OSGeo4W shell. 
+Two methods depending on your version of QGIS, for newer versions,
+1. Open the OSGeo4W Shell (may need admin permission)
+2. Install via pip
+###
+    $ pip install pyromb
+
+If that fails, try:
 1. Open the OSGeo4W Shell (may need admin permission)
 2. Enter **py3_env**
 3. Install via pip
