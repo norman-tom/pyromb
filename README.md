@@ -88,6 +88,8 @@ Point geometry
 **Attributes**  
 'id' The name of the confluence [string]  
 'out' Flag whether this confluence is the outfall [integer]  
+<p>If no outlet is set, building the catchment will fail. If more than one is set, the first confluence with this attribute set will be adopted as the outlet. </p>
+
 **Support**  
 Confluence Only  
 **Notes**  
@@ -99,9 +101,9 @@ In the future, these will represent other features like storage.
 2. Centroids are created from the basins, either using the in-built centroid tool in QGIS or estimating the location. Centroids represent a sub-area in the RORB Model. These don’t have the be at the centroid, these can be moved to suit the reaches. 
 3. Confluences are manually located at junctions of reaches, these represent junction nodes in the RORB model and outlet locations in WBNM. 
 4. Reach is the thalweg of the flow paths through the catchment. These are disjointed at each confluence and centroid, that is, they must start at an upstream confluence or centroid and end at the immediately downstream confluence or centroid.
-5. Out location, the outlet of the catchment must be explicitly nominated by setting the GIS attribute as 1. All other confluence should of their out set at 0. 
+5. Out location, the outlet of the catchment must be explicitly nominated by setting the GIS attribute as 1. All other confluence should have this attribute set to 0. 
 
 An example of a built catchment can be found in the data folder. 
 
 # Roadmap
-Slowly implementing additional functionality of RORB as I need.
+Currently working on autogenerating the catchment diagram from an outlet location. That is, given an outlet location and DEM -> create subcatchment boundaries, reaches, centroids and confluences. The hope is that this will enable hydrographs to be generated very fast, with a high degree of scalability.    
