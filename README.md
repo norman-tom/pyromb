@@ -42,7 +42,7 @@ If that fails, try:
 3. Runoff Model: RORB is a processing plugin and is located in the processing toolbox under **Runoff Model**
 
 ## Setting Up A Catchment
-PR uses four shapefiles to provide the necessary information to build the RORB and WBNM vector, these are detailed below. The attributes that must be present in the shapefile so that PR has can build the control files. The easiest way to ensure the necessary attributes are present is to use the example shapefiles in the data folder. 
+PR uses four shapefiles to provide the necessary information to build the RORB and WBNM vector, these are detailed below. The attributes that must be present in the shapefile so that PR has can build the control files. The easiest way to ensure the necessary attributes are present is to use the example shapefiles in the [data](https://github.com/norman-tom/pyromb/tree/main/data) folder. 
 ### Reaches
 Reaches are the connection between basins and confluences.  
 
