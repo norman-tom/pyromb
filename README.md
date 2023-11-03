@@ -55,7 +55,8 @@ Line geometry.
 **Support**  
 Type 1 reach only.  
 **Notes**  
-Reach length is derived from the shapefile geometry. 
+Reach length is derived from the shapefile geometry.  
+Reaches must have a alphabetic character in them to stop RORB thinking that these are node IDs, for example instead of labelling a reach '1' label it 'R1'. 
 
 ### Centroids
 Centroids represent the basin attributes and are located as close to the basin centroid as possible, while still intersecting a reach.  
