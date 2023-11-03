@@ -45,7 +45,7 @@ If that fails, try:
 PR uses four shapefiles to provide the necessary information to build the RORB and WBNM vector, these are detailed below. The attributes that must be present in the shapefile so that PR has can build the control files. The easiest way to ensure the necessary attributes are present is to use the example shapefiles in the [data](https://github.com/norman-tom/pyromb/tree/main/data) folder. 
 
 **WARNING**   
-the id fields must be unique between the reaches, confluences and centroids otherwise the catg file will not build correctly. This will be updated in subsequent releases. 
+the id fields must be globally unique between the reaches, confluences and centroids otherwise the catg file will not build correctly. This will be updated in subsequent releases. 
 
 ### Reaches
 Reaches are the connection between basins and confluences.  
