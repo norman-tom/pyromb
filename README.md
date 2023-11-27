@@ -1,7 +1,7 @@
 # Runoff Model Builder (pyromb)
 Author: Tom Norman
 
-The Pyromb (PR) library builds both RORB[1] and WBNM[2] model input files from ESRI shapefiles typically generated through a GIS package. This library's primary reason for existing is for use within the QGIS plugins **Runoff Model: RORB** and **Runoff Model: WBNM**
+The Pyromb (PR) library builds both RORB[1] and WBNM[2] model input files from ESRI shapefiles typically generated through a GIS package. This library's primary reason for existing is for use within the QGIS plugins [**Runoff Model: RORB**](https://plugins.qgis.org/plugins/build_rorb/) and **Runoff Model: WBNM**
 
 The library as it stands, is a minimal viable implementation of RORB and WBNM control files. It does however solve the primary issue with text file input models, that is, the need to manually transcribe information from GIS to the text file or graphical editor. Pyromb is now compatible with the RORB GE, therefore the generated control vector files can be easily modified for more complex catchments. 
 
