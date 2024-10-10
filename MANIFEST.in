@@ -1,0 +1,2 @@
+# Include all JSON files in the resources directory and its subdirectories
+recursive-include src/pyromb/resources *.json
