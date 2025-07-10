@@ -1,0 +1,37 @@
+{
+    "reaches": [
+        {
+            "name": "t",
+            "type": "N"
+        },
+        {
+            "name": "s",
+            "type": "N"
+        },
+        {
+            "name": "id",
+            "type": "C"
+        }
+    ],
+    "basins": [],
+    "centroids": [
+        {
+            "name": "id",
+            "type": "C"
+        },
+        {
+            "name": "fi",
+            "type": "N"
+        }
+    ],
+    "confluences": [
+        {
+            "name": "id",
+            "type": "C"
+        },
+        {
+            "name": "out",
+            "type": "N"
+        }
+    ]
+}
