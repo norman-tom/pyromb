@@ -36,5 +36,17 @@
     "fi_table": {
         "percision": ">.5f",
         "column_width": ">13"
+    },
+    "urbs_node": {
+        "id": ">7",
+        "x": ">15.3f",
+        "y": ">15.3f",
+        "name": "<20"
+    },
+    "urbs_reach": {
+        "id": ">7",
+        "x": ">15.3f",
+        "y": ">15.3f",
+        "name": "<20"
     }
 }
