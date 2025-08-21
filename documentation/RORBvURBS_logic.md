@@ -1,6 +1,5 @@
-Excellent question. This is the perfect way to approach building an agnostic GUI. By understanding the conceptual similarities and the specific syntactical differences, you can design a common internal data structure and then write separate "compiler" modules that generate the appropriate file for each program.
-
-Based on the RORB manual and your provided Python logic, let's break this down into a side-by-side comparison.
+Author: Lindsay Millard 21 Aug 2025
+Purpose: To provide notes and roadmap for implementation of URBS plugin to work with pyromb and in parallel to RORB.
 
 ### 1. Conceptual Model and Traversal Logic
 
@@ -46,7 +45,6 @@ This is the core of the translation. The logic is nearly identical, but the synt
 
 ### 5. Units Comparison
 
-This is critical. A mistake here will lead to incorrect results.
 
 | Parameter | RORB Unit (Table 5-1) | URBS Unit (Table 2) | Notes |
 | :--- | :--- | :--- | :--- |
@@ -60,9 +58,7 @@ This is critical. A mistake here will lead to incorrect results.
 
 ### 6. Adapting Your Python Logic (Pseudo-code)
 
-Here is a side-by-side adaptation of your pseudo-code logic to highlight the changes required to support both models from a single traversal.
-
-#### RORB `traverse_and_write_branch` (Your Existing Logic)
+#### RORB `traverse_and_write_branch` (Existing Logic)
 
 ```python
 # --- For RORB ---
@@ -93,7 +89,7 @@ def traverse_and_write_rorb(current_reach, vec_file):
             vec_file.write(f"7.1\n{downstream_node.name}\n") # RORB PRINT
 ```
 
-#### URBS `traverse_and_write_branch` (New Logic)
+#### URBS `traverse_and_write_branch` (URBS Logic)
 
 ```python
 # --- For URBS ---
@@ -134,4 +130,3 @@ def traverse_and_write_urbs(current_reach, vec_file):
     *   The `UrbsVectorWriter` will output text commands with named parameters. It will *not* write the sub-area data to the `.vec` file. Instead, your GUI's "Save" function must also call a separate `UrbsCatWriter` that iterates through all subcatchment objects and generates the `.cat` CSV file.
 4.  **Unit Conversion:** The GUI should store all data in a consistent internal format (e.g., slope as `m/m`). When the `RorbVectorWriter` is called, it must convert the internal `m/m` slope value to `%` before writing it to the file. The `UrbsVectorWriter` can write it directly.
 
-This side-by-side structure should give you a clear roadmap for abstracting your GUI's logic to support both powerful modeling tools.

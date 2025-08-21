@@ -1,6 +1,7 @@
-Of course. Based on your request and the context you've provided, you're looking for a conceptual bridge between how a visual, node-and-link based GUI (like one for RORB) would work and how to translate that structure into the sequential, command-based format of a URBS `.vec` file.
+Author: Lindsay Millard 21 Aug 2025
+Purpose: To provide notes and roadmap for implementation of URBS plugin to work with pyromb
 
-You've correctly identified the core components. Let's break down the logic of how URBS constructs a catchment model.
+A conceptual bridge between how a visual, node-and-link based GUI (like one for RORB) would work and how to translate that structure into the sequential, command-based format of a URBS `.vec` file.
 
 ### The URBS Conceptual Model: "The Running Hydrograph"
 
@@ -96,12 +97,11 @@ def traverse_and_write_branch(current_reach, vec_file):
 
 ```
 
-### Key Instructions for Your GUI Development:
+### Key Instructions for GUI Development:
 
-1.  **Network Traversal is Key:** Your GUI's primary job when writing the `.vec` file is to correctly traverse the user-drawn network. It must identify the main channel and tributaries to correctly order the commands.
-2.  **`STORE`/`GET` for Junctions:** Every time your traversal algorithm encounters a junction with a tributary, it must write a `STORE`, then call the traversal function for the tributary, and then write a `GET`.
+1.  **Network Traversal is Key:**  GUI's primary job when writing the `.vec` file is to correctly traverse the user-drawn network. It must identify the main channel and tributaries to correctly order the commands.
+2.  **`STORE`/`GET` for Junctions:** Every time traversal algorithm encounters a junction with a tributary, it must write a `STORE`, then call the traversal function for the tributary, and then write a `GET`.
 3.  **`RAIN` vs. `ADD RAIN`:** `RAIN` is the command to *start* a hydrograph at the top of a branch. `ADD RAIN` is for every subsequent subcatchment that adds flow to that same branch. Your code must distinguish between the headwater reach of a branch and subsequent reaches.
-4.  **Link `Reach` to `Subcatchment`:** In your GUI's data structure, every `Reach` object should be linked to a `Subcatchment` object. This is because URBS routing commands (`RAIN`, `ADD RAIN`, `ROUTE`) need the physical properties of a subcatchment to function. This is how the `.vec` file knows which parameters from the `.cat` file to use for routing.
+4.  **Link `Reach` to `Subcatchment`:** In GUI's data structure, every `Reach` object should be linked to a `Subcatchment` object. This is because URBS routing commands (`RAIN`, `ADD RAIN`, `ROUTE`) need the physical properties of a subcatchment to function. This is how the `.vec` file knows which parameters from the `.cat` file to use for routing.
 5.  **Generate `.cat` File First:** Create a simple function that iterates through all `Subcatchment` objects in your GUI and writes their properties line-by-line into a CSV file. This is straightforward. The `Index` you write to this file is the same one you'll use in the `.vec` file (`RAIN #1`, `ADD RAIN #2`, etc.).
 
-By implementing this traversal logic, your GUI can effectively translate a user-friendly, visual network into the specific, sequential instruction set that URBS requires.

@@ -94,8 +94,8 @@ class BuildUrbsAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterFileDestination(
                 self.OUTPUT,
-                self.tr('URBS control vector file'),
-                self.tr('Control vector (*.catg)')
+                self.tr('URBS vector file (.vec)'),
+                self.tr('URBS vector (*.vec)')
             )
         )
 
@@ -124,8 +124,25 @@ class BuildUrbsAlgorithm(QgsProcessingAlgorithm):
         catchment.connect()
         traveller = pyromb.Traveller(catchment)
 
+        # Create URBS model with proper model name
+        model_name = os.path.splitext(os.path.basename(sink))[0]
+        urbs_model = pyromb.URBS(model_name)
+        
+        # Generate both .vec and .cat files
+        vec_content, cat_content = urbs_model.getFiles(traveller)
+        
+        # Write .vec file
         with open(sink, 'w') as f:
-            f.write(traveller.getVector(pyromb.URBS()))
+            f.write(vec_content)
+        
+        # Write .cat file (same directory, different extension)
+        cat_file = os.path.splitext(sink)[0] + '.cat'
+        with open(cat_file, 'w') as f:
+            f.write(cat_content)
+        
+        feedback.pushInfo(f'Generated URBS files:')
+        feedback.pushInfo(f'  Vector file: {sink}')
+        feedback.pushInfo(f'  Catchment data file: {cat_file}')
 
         return {self.OUTPUT: sink}
 
@@ -142,13 +159,16 @@ class BuildUrbsAlgorithm(QgsProcessingAlgorithm):
         return 'rombuilder'
 
     def shortHelpString(self):
-        return self.tr("Build a URBS control vector file from GIS layers representing catchment reaches, basins, centroids, and confluences.\n\n"
+        return self.tr("Build URBS model files from GIS layers representing catchment reaches, basins, centroids, and confluences.\n\n"
                        "Input layers:\n"
-                       "- Reach layer: Line features representing stream reaches\n"
-                       "- Basin layer: Polygon features representing catchment basins\n"
+                       "- Reach layer: Line features representing stream reaches with length and slope attributes\n"
+                       "- Basin layer: Polygon features representing catchment basins with area and imperviousness\n"
                        "- Centroid layer: Point features representing basin centroids\n"
                        "- Confluence layer: Point features representing stream confluences\n\n"
-                       "The algorithm will generate a .catg file compatible with URBS hydrological modeling software.")
+                       "The algorithm generates two files:\n"
+                       "- .vec file: Contains URBS command sequence (RAIN, ADD RAIN, STORE, GET, etc.)\n"
+                       "- .cat file: Contains subcatchment data in CSV format\n\n"
+                       "Both files are required for URBS hydrological modeling.")
 
     def icon(self):
         return QIcon()
