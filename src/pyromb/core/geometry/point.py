@@ -12,17 +12,16 @@ class Point:
     def __init__(self, x: float = 0.0, y: float = 0.0):
         self._x = x
         self._y = y
-    
+
     def __str__(self):
         return "[{}, {}]".format(self._x, self._y)
-    
+
     def coordinates(self) -> tuple:
         """The co-ordinates of the point.
 
-        Returns
+        Returns:
         -------
         tuple
             (x,y) co-ordinates.
         """
-        
-        return (self._x, self._y) 
+        return (self._x, self._y)

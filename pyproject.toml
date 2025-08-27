@@ -7,19 +7,17 @@ packages = ["src/pyromb"]
 
 [tool.hatch.build]
 only-packages = true
-exclude = [
-  ".conda",
-]
+
 
 [project]
 name = "pyromb"
-version = "0.2.0"
+version = "0.3.0"
 authors = [ 
-    { name="Tom Norman", email="tom@normcosystems.com" }
+    { name="Tom Norman", email="tom@ncos.com.au" }
 ]
-description = "Runoff Model Builder (Pyromb) is a package used for building RORB, WBNM, and URBS control files from catchment diagrams built from ESRI shapefiles. Its primary use is in the QGIS plugins Runoff Model: RORB, Runoff Model: WBNM, and Runoff Model: URBS"
+description = "Runoff Model Builder (Pyromb) is a package used for building RORB, WBNM, and URBS control files from catchment diagrams built from ESRI shapefiles. Its primary use is in the QGIS plugins 'Runoff Model Builder', though can be used as a standalone Python library"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -27,6 +25,39 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+dependencies = [
+  "numpy",
+  "pandas",
+  "matplotlib"
+]
+
 [project.urls]
 "Homepage" = "https://github.com/norman-tom/pyromb"
 "Bug Tracker" = "https://github.com/norman-tom/pyromb/issues"
+
+[dependency-groups]
+dev = [
+    "pyshp>=2.3.1",
+    "pytest>=8.4.1",
+]
+
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+exclude = [
+  ".git",
+  ".venv",
+  "dist",
+  ".vscode",
+  ".github",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"!src/**.py" = ["D"]

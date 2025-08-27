@@ -1,12 +1,14 @@
-from .model import Model
-from ..core.traveller import Traveller
+import numpy as np
+
 from ..core.attributes.basin import Basin
 from ..core.attributes.confluence import Confluence
 from ..core.geometry.point import Point
-import numpy as np
+from ..core.traveller import Traveller
+from ..core.model import Model
+
 
 class WBNM(Model):
-    """The WBNM class creates a templated runfile based on a catchment 
+    """The WBNM class creates a templated runfile based on a catchment
     diagram produced in GIS.
 
     Only basic functionality is supported at this stage. Storm and 
@@ -48,7 +50,6 @@ class WBNM(Model):
         traveller : Traveller
             The traveller traversing this catchment.
         """
-        
         # go to the very top of the catchment.
         traveller.next()
         # Traverse the catchment and build each subarea.
@@ -72,7 +73,6 @@ class WBNM(Model):
         """Get the index of the downstream subarea from the current position i.
         Confluence are not considered subareas in WBNM and will be passed over. 
         """
-
         ds = traveller.down(i)
         if isinstance(traveller.getNode(ds), Basin):
             return ds
@@ -84,15 +84,14 @@ class WBNM(Model):
     def _getDSSubArea(self, traveller: Traveller, index):
         """Get the downstream subarea corresponding to an index.
         """
-        
         node = traveller.getNode(index)
         name = node.name
         for s in self._subAreas:
             if s.name == name:
                 return s
-    
+
     def _getOutCoordinate(self, subarea) -> Point:
-        """ Determine the out co-ordinate of the sub area. 
+        """Determine the out co-ordinate of the sub area.
 
         The out location is the scaled vector between the two subarea centroids.
         Scaling of the vector is based on the ratio of subarea sizes.
@@ -105,7 +104,6 @@ class WBNM(Model):
         where: area1 and area2 are the areas of the upstream subArea and 
         downstream subarea respoectively. 
         """
-
         # Build X and a
         x1, y1 = subarea.centroid()
         x2, y2 = subarea.dsSubArea.centroid()
@@ -114,12 +112,12 @@ class WBNM(Model):
         X = np.array([[x2, x1], [y2, y1]])
         a = np.array([a1 / (a1 + a2), -a1 / (a1 + a2)])
 
-        # Calculate the out location between the basins. 
+        # Calculate the out location between the basins.
         co = (X @ a) + X[:, 1]
 
         # Return the location as a point
         return Point(co[0], co[1])
-            
+
     def _createValueBlock(self, value) -> str:
         """Create a value block for insertions into a code block.
         
@@ -128,7 +126,6 @@ class WBNM(Model):
         would make up a single value block, and is part of the 'TOPOLOGY_BLOCK'. 
         The value block is 12 characters wide with space padding.  
         """
-
         try:
             string = str(value)
             if len(string) > 12:
@@ -141,7 +138,7 @@ class WBNM(Model):
             return string.ljust(12, ' ')
         else:
             raise ValueError("value must be a string or float")
-    
+
     def _createCodeBlock(self, blockName: str):
         """A code block is the grouping of values per the Runfile specification.
 
@@ -153,7 +150,6 @@ class WBNM(Model):
         VERSION_NUMBER FILE_STATUS        \n
         #####END_STATUS_BLOCK##############|###########|###########|###########|\n
         """
-
         if blockName == "preamble":
             return self._blockPreamble() + "\n\n\n"
         if blockName == "status":
@@ -172,41 +168,37 @@ class WBNM(Model):
             return self._blockOutletStructures() + "\n\n\n"
         if blockName == "storm":
             return self._blockStorm()
-    
+
     def _blockPreamble(self):
         """Get the PREAMBLE_BLOCK, content is optional so not implementing at this stage
         """
-
         return \
         "#####START_PREAMBLE_BLOCK##########|###########|###########|###########|\n" + \
         "\n" * 8 + \
         "#####END_PREAMBLE_BLOCK############|###########|###########|###########|"
-    
-    def _blockStatus(self):
-        """ Get the STATUS_BLOCK, only implementing required value blocks
-        """
 
+    def _blockStatus(self):
+        """Get the STATUS_BLOCK, only implementing required value blocks
+        """
         return \
         "#####START_STATUS_BLOCK############|###########|###########|###########|\n" + \
         "\n" * 3 + \
         f"{self._createValueBlock(self.values['VERSION_NUMBER'])}\n" + \
         "#####END_STATUS_BLOCK##############|###########|###########|###########|"
-    
+
     def _blockDisplay(self):
         """Get the DISPLAY_BLOCK, display block values are optional, not implementing at this stage
         """
-
         return \
         "#####START_DISPLAY_BLOCK###########|###########|###########|###########|\n" + \
         f"{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}\n" + \
         f"{self._createValueBlock('none')}\n" + \
         f"{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}{self._createValueBlock(0)}\n" + \
         "#####END_DISPLAY_BLOCK#############|###########|###########|###########|"
-    
-    def _blockTopology(self):
-        """Get the TOPOLOGY_BLOCK, only implementing necessary values at this stage. 
-        """
 
+    def _blockTopology(self):
+        """Get the TOPOLOGY_BLOCK, only implementing necessary values at this stage.
+        """
         insertSubArea = ""
         for s in self._subAreas:
             insertSubArea += self._createValueBlock(s.name) + \
@@ -218,7 +210,7 @@ class WBNM(Model):
         f"{self._createValueBlock(len(self._subAreas))} {self._createValueBlock(self.values['CATCHMENT_NAME'])}\n" + \
         f"{insertSubArea}" +\
         "#####END_TOPOLOGY_BLOCK#############|###########|###########|###########|"
-    
+
     def _blockSurface(self):
         insertSurface = ""
         for s in self._subAreas:
@@ -242,7 +234,7 @@ class WBNM(Model):
         f"{len([x for x in self._subAreas if x.streamChannel])}\n" + \
         insertFlow + \
         "#####END_FLOWPATHS_BLOCK###########|###########|###########|###########|"
-    
+
     def _blockLocalStructures(self):
         return \
         "#####START_LOCAL_STRUCTURES_BLOCK##|###########|###########|###########|\n" + \
@@ -256,11 +248,10 @@ class WBNM(Model):
        "#####END_OUTLET_STRUCTURES_BLOCK###|###########|###########|###########|"
 
     def _blockStorm(self):
-        """Stormblock is a template at this stage. Catchment specific information will  
+        """Stormblock is a template at this stage. Catchment specific information will
         eventually be injected into this block. This block will require manual configuration in
         the WBNM runfile. 
         """
-
         return \
         "#####START_STORM_BLOCK#############|###########|###########|###########|\n" + \
         f"{self._createValueBlock(1)}\n" + \
@@ -294,7 +285,7 @@ class WBNM(Model):
         "#####END_STORM_BLOCK###############|###########|###########|###########|"
 
 class SubArea(Basin):
-    """SubArea as defined by the WBNM specification. 
+    """SubArea as defined by the WBNM specification.
     
     A subclass of  Basin, SubArea is the main object in the WBNM model. The SubArea
     generates a hydrograph for the SubArea and routes the flow to the downstream 
@@ -319,7 +310,7 @@ class SubArea(Basin):
     @property
     def x(self) -> tuple:
         return self._x
-    
+
     @x.setter
     def x(self, value: tuple):
         self._x = value
@@ -327,7 +318,7 @@ class SubArea(Basin):
     @property
     def y(self) -> tuple:
         return self._y
-    
+
     @y.setter
     def y(self, value: tuple):
         self._y = value
@@ -335,7 +326,7 @@ class SubArea(Basin):
     @property
     def out(self) -> Point:
         return self._out
-    
+
     @out.setter
     def out(self, value: Point):
         self._out = value
@@ -343,7 +334,7 @@ class SubArea(Basin):
     @property
     def streamChannel(self) -> bool:
         return self._streamChannel
-    
+
     @streamChannel.setter
     def streamChannel(self, value: bool):
         self._streamChannel = value
@@ -351,7 +342,7 @@ class SubArea(Basin):
     @property
     def area(self) -> float:
         return self._area
-    
+
     @area.setter
     def area(self, value: float):
         self._area = value
@@ -359,7 +350,7 @@ class SubArea(Basin):
     @property
     def fractionImp(self) -> float:
         return self._fi
-    
+
     @fractionImp.setter
     def fractionImp(self, value: float):
         self._fi = value
@@ -367,7 +358,7 @@ class SubArea(Basin):
     @property
     def dsNodeIndex(self):
         return self._dsNodeIndex
-    
+
     @dsNodeIndex.setter
     def dsNodeIndex(self, subarea: int):
         self._dsNodeIndex = subarea
@@ -375,7 +366,7 @@ class SubArea(Basin):
     @property
     def dsSubArea(self):
         return self._dsSubArea
-    
+
     @dsSubArea.setter
     def dsSubArea(self, subarea):
         self._dsSubArea = subarea

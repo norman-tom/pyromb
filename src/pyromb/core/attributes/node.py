@@ -1,12 +1,13 @@
 from ..geometry.point import Point
 
+
 class Node(Point):
-    """Node in the catchment tree. 
+    """Node in the catchment tree.
     
     Encapsulates attributes of point like features in the catchment such as 
     basins and confluences.
 
-    Attributes
+    Attributes:
     ----------
     name : str
         The name of the node
@@ -19,7 +20,7 @@ class Node(Point):
     @property
     def name(self) -> str:
          return self._name
-    
+
     @name.setter
     def name(self, name: str):
         self._name = name

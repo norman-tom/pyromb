@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def plot_catchment(connected, tr, tc, tb):
     cx = []
     cy = []
@@ -36,7 +37,7 @@ def plot_catchment(connected, tr, tc, tb):
         nodeNames.append("{}[{}]".format(n.name, i))
     for i, b in enumerate(tb):
         nodeNames.append("{}[{}]".format(b.name, i + len(cname)))
-        
+
     fig, ax = plt.subplots()
     im = ax.imshow(connected[0])
     ax.set_xticks(np.arange(0, len(reachNames)))

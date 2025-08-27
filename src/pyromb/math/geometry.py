@@ -1,20 +1,21 @@
 import math
+
 from ..core.geometry.point import Point
 
+
 def length(vertices:list) -> float:
-    """Calculate the cartesian length of a vector of co-ordinates. 
+    """Calculate the cartesian length of a vector of co-ordinates.
 
     Parameters
     ----------
     vertices : list
         The list of co-ordinates to calculate the length.
 
-    Returns
+    Returns:
     -------
     float
         The vector length.
     """
-
     length = 0
     for i in range(len(vertices) - 1):
         length += math.sqrt( \
@@ -32,12 +33,11 @@ def polygon_area(vertices:list) -> float:
     vertices : list
         A list of points representing the polygon.
 
-    Returns
+    Returns:
     -------
     float
         The polygon area.
     """
-
     psum = 0
     nsum = 0
     for i in range(len(vertices)):
@@ -60,12 +60,11 @@ def polygon_centroid(vertices:list) -> Point:
     vertices : list
         A list of points representing the polygon.
 
-    Returns
+    Returns:
     -------
     Point
         The centroid.
     """
-    
     sumx = 0
     sumy = 0
     suma = 0
@@ -78,5 +77,5 @@ def polygon_centroid(vertices:list) -> Point:
     A = 0.5 * suma
     Cx = (1 / (6 * A)) * sumx
     Cy = (1 / (6 * A)) * sumy
-    
+
     return Point(Cx, Cy)

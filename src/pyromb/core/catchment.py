@@ -1,12 +1,13 @@
-from .attributes.basin import Basin
+import numpy as np
+
+from ..math import geometry
 from .attributes.confluence import Confluence
 from .attributes.node import Node
 from .attributes.reach import Reach
-from ..math import geometry
-import numpy as np
+
 
 class Catchment:
-    """The Catchment is a tree of attributes which describes how water 
+    """The Catchment is a tree of attributes which describes how water
     flows through the model and the entities which act upon it. 
 
     Parameters
@@ -28,14 +29,13 @@ class Catchment:
         self._endSentinel = -1
 
     def connect(self) -> tuple:
-        """Connect the individual attributes to create the catchment. 
+        """Connect the individual attributes to create the catchment.
 
-        Returns
+        Returns:
         -------
         tuple
             (downstream, upstream) incidence matricies of the catchment tree.
         """
-        
         connectionMatrix = np.zeros((len(self._vertices), len(self._edges)), dtype=int)
         for i, edge in enumerate(self._edges):
             s = edge.getStart()
@@ -54,25 +54,25 @@ class Catchment:
                     closestEnd = j
                     minEnd = tempEnd
             connectionMatrix[closestStart][i] = 1
-            connectionMatrix[closestEnd][i] = 2   
+            connectionMatrix[closestEnd][i] = 2
 
-        
+
         # Find the 'out' node
         # Used to determine the starting point of breath first search
-        # And subsequently the direction of flow  
-        for k, conf in enumerate(self._vertices):  
+        # And subsequently the direction of flow
+        for k, conf in enumerate(self._vertices):
             if isinstance(conf, Confluence):
                 if conf.isOut:
                     self._out = k
                     break
-        
-        
+
+
         # Determine incidence matrix relating reaches to nodes and map downstream direction between elements
         # Matrix I (m * m - 1)
         # m = nodes
         # n = reaches
         # value of m n =  the index of the downstream node
-        # Think about I as relating upstream nodes (m) to downstream nodes (m n) through reach (n) 
+        # Think about I as relating upstream nodes (m) to downstream nodes (m n) through reach (n)
         # (m n) of -1 indicates no downstream node for relationship m n
         newIncidenceDS = np.zeros((len(self._vertices), len(self._edges)), dtype=int)
         newIncidenceDS.fill(self._endSentinel)
@@ -110,5 +110,5 @@ class Catchment:
                 i += 1
         self._incidenceMatrixDS = newIncidenceDS.copy()
         self._incidenceMatrixUS = newIncidenceUS.copy()
-        
+
         return (self._incidenceMatrixDS, self._incidenceMatrixUS)

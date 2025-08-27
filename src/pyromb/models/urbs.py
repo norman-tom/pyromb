@@ -1,14 +1,14 @@
-from .model import Model
-from ..core.traveller import Traveller
-from ..core.attributes.basin import Basin
-from ..core.attributes.confluence import Confluence
-from ..core.attributes.reach import ReachType
 import csv
 from io import StringIO
 
+from ..core.attributes.basin import Basin
+from ..core.attributes.confluence import Confluence
+from ..core.traveller import Traveller
+from ..core.model import Model
+
+
 class UrbsVectorWriter:
-    """
-    Writes URBS .vec file commands following proper URBS text-based command structure.
+    """Writes URBS .vec file commands following proper URBS text-based command structure.
     Implements the traversal logic from URBS_logic.md and RORBvURBS_logic.md
     """
 
@@ -19,7 +19,7 @@ class UrbsVectorWriter:
         self._commandVector = []
         self._model_name = model_name
         self._subcatchment_index_map = {}  # Map positions to subcatchment indices
-    
+
     def step(self, traveller: Traveller) -> None:
         """ 
         Calculate action to take at current step and generate URBS command.
@@ -32,12 +32,12 @@ class UrbsVectorWriter:
         self._state(traveller)
         if self._stateVector:
             self._control(self._stateVector[-1], traveller)
-    
+
     def build_vec_file(self) -> str:
         """ 
         Builds the URBS .vec file content with proper header and commands.
             
-        Returns
+        Returns:
         -------
         str
             The complete .vec file content with header and commands
@@ -47,16 +47,15 @@ class UrbsVectorWriter:
         vec_content += "USES: L CS U\n"
         vec_content += "DEFAULT PARAMETERS: alpha = 0.5 m = 0.8 beta = 3 n = 1.0 x = 0.25\n"
         vec_content += f"CATCHMENT DATA FILE = {self._model_name}.cat\n"
-        
+
         for command in self._commandVector:
             vec_content += f"{command}\n"
-        
+
         vec_content += "END OF CATCHMENT DATA.\n"
         return vec_content
 
     def _state(self, traveller: Traveller) -> None:
-        """
-        Store the current state of the traveller and determine URBS command.
+        """Store the current state of the traveller and determine URBS command.
         
         URBS Command Logic:
         - RAIN: Start hydrograph at headwater subcatchment
@@ -73,7 +72,7 @@ class UrbsVectorWriter:
         """
         i = traveller._pos
         up = traveller.top(i)
-        
+
         if i == traveller._endSentinel:
             ret = (0, i)  # End of traversal
         elif (self._runningHydro == False) and (isinstance(traveller._catchment._vertices[i], Basin)):
@@ -103,12 +102,11 @@ class UrbsVectorWriter:
             # Default case
             traveller.next()
             ret = (0, i)
-        
+
         self._stateVector.append(ret)
 
     def _control(self, code: tuple, traveller: Traveller) -> None:
-        """
-        Generate URBS text commands based on traversal state.
+        """Generate URBS text commands based on traversal state.
 
         Parameters
         ----------
@@ -118,26 +116,26 @@ class UrbsVectorWriter:
             The traveller traversing this catchment.
         """
         command_code, pos = code
-        
+
         try:
             if command_code == 1:  # RAIN - Start branch at headwater
                 self._generate_rain_command(pos, traveller)
-                
+
             elif command_code == 2:  # ADD RAIN - Add subcatchment inflow
                 self._generate_add_rain_command(pos, traveller)
-                
+
             elif command_code == 3:  # STORE - Store hydrograph at junction
                 self._commandVector.append("STORE.")
-                
+
             elif command_code == 4:  # GET - Retrieve stored hydrograph
                 self._commandVector.append("GET.")
-                
+
             elif command_code == 5:  # ROUTE - Route without local inflow
                 self._generate_route_command(pos, traveller)
-                
+
             elif command_code == 7:  # PRINT - Output at node
                 self._generate_print_command(pos, traveller)
-                
+
         except Exception as e:
             # Fallback for errors
             self._commandVector.append(f"! Error generating command for code {command_code} at position {pos}: {str(e)}")
@@ -146,53 +144,53 @@ class UrbsVectorWriter:
         """Generate RAIN command for headwater subcatchment."""
         basin = traveller._catchment._vertices[pos]
         reach = traveller.getReach(pos)
-        
+
         # Get or create subcatchment index
         subcatchment_index = self._get_subcatchment_index(pos, basin)
         length_km = reach.length() / 1000
-        
+
         command = f"RAIN #{subcatchment_index} L={length_km:.3f}"
-        
+
         # Add slope parameter if available (URBS uses m/m, not %)
         if hasattr(reach, 'slope') and reach.slope is not None:
             slope_mm = reach.slope  # Assume internal format is m/m
             command += f" Sc={slope_mm:.6f}"
-        
+
         self._commandVector.append(command)
 
     def _generate_add_rain_command(self, pos: int, traveller: Traveller) -> None:
         """Generate ADD RAIN command for subcatchment."""
         basin = traveller._catchment._vertices[pos]
         reach = traveller.getReach(pos)
-        
+
         # Get or create subcatchment index
         subcatchment_index = self._get_subcatchment_index(pos, basin)
         length_km = reach.length() / 1000
-        
+
         command = f"ADD RAIN #{subcatchment_index} L={length_km:.3f}"
-        
+
         # Add slope parameter if available (URBS uses m/m, not %)
         if hasattr(reach, 'slope') and reach.slope is not None:
             slope_mm = reach.slope  # Assume internal format is m/m
             command += f" Sc={slope_mm:.6f}"
-        
+
         self._commandVector.append(command)
 
     def _generate_route_command(self, pos: int, traveller: Traveller) -> None:
         """Generate ROUTE command for routing without local inflow."""
         reach = traveller.getReach(pos)
-        
+
         # Use position as subcatchment reference for routing properties
         subcatchment_index = pos
         length_km = reach.length() / 1000
-        
+
         command = f"ROUTE THRU #{subcatchment_index} L={length_km:.3f}"
-        
+
         # Add slope parameter if available (URBS uses m/m, not %)
         if hasattr(reach, 'slope') and reach.slope is not None:
             slope_mm = reach.slope  # Assume internal format is m/m
             command += f" Sc={slope_mm:.6f}"
-        
+
         self._commandVector.append(command)
 
     def _generate_print_command(self, pos: int, traveller: Traveller) -> None:
@@ -210,21 +208,19 @@ class UrbsVectorWriter:
             else:
                 # Create sequential index
                 self._subcatchment_index_map[pos] = len(self._subcatchment_index_map) + 1
-        
+
         return self._subcatchment_index_map[pos]
 
 
 class UrbsCatWriter:
+    """Writes URBS .cat file containing subcatchment data in CSV format.
     """
-    Writes URBS .cat file containing subcatchment data in CSV format.
-    """
-    
+
     def __init__(self) -> None:
         pass
-    
+
     def build_cat_file(self, traveller: Traveller, subcatchment_index_map: dict = None) -> str:
-        """
-        Generate URBS .cat file content with subcatchment data.
+        """Generate URBS .cat file content with subcatchment data.
         
         Parameters
         ----------
@@ -233,24 +229,24 @@ class UrbsCatWriter:
         subcatchment_index_map : dict
             Mapping of positions to subcatchment indices
             
-        Returns
+        Returns:
         -------
         str
             The complete .cat file content in CSV format
         """
         csv_output = StringIO()
         writer = csv.writer(csv_output)
-        
+
         # Write header - URBS .cat file format
         writer.writerow(['Index', 'Name', 'Area', 'Imperviousness', 'IL', 'CL'])
-        
+
         # Extract and write subcatchment data
         subcatchments = self._extract_subcatchments(traveller)
-        
+
         for subcatchment in subcatchments:
             pos = subcatchment['position']
             basin = subcatchment['basin']
-            
+
             # Get index from mapping or use sequential
             if subcatchment_index_map and pos in subcatchment_index_map:
                 index = subcatchment_index_map[pos]
@@ -258,34 +254,33 @@ class UrbsCatWriter:
                 index = basin.index
             else:
                 index = pos
-            
+
             name = basin.name if hasattr(basin, 'name') else f"Sub_{index}"
             area = basin.area if hasattr(basin, 'area') else 0.0
             imperviousness = basin.fi if hasattr(basin, 'fi') else 0.0
             il = basin.il if hasattr(basin, 'il') else 0.0  # Initial Loss
             cl = basin.cl if hasattr(basin, 'cl') else 2.5  # Continuing Loss (default)
-            
+
             writer.writerow([index, name, area, imperviousness, il, cl])
-        
+
         return csv_output.getvalue()
-    
+
     def _extract_subcatchments(self, traveller: Traveller) -> list:
         """Extract all basin subcatchments from the catchment."""
         subcatchments = []
-        
+
         for i, vertex in enumerate(traveller._catchment._vertices):
             if isinstance(vertex, Basin):
                 subcatchments.append({
                     'position': i,
                     'basin': vertex
                 })
-        
+
         return subcatchments
 
 
 class URBS(Model):
-    """
-    Create URBS model files for input to the URBS runoff routing model.
+    """Create URBS model files for input to the URBS runoff routing model.
     
     This implementation follows the proper URBS approach as outlined in the documentation:
     - Generates separate .vec and .cat files
@@ -293,63 +288,60 @@ class URBS(Model):
     - Handles proper unit conversions (m/m for slope)
     - Implements depth-first traversal logic for URBS command generation
     """
-    
+
     def __init__(self, model_name: str = "URBS_Model"):
         self.model_name = model_name
-    
+
     def getVector(self, traveller: Traveller) -> str:
-        """
-        Generate URBS .vec file content.
+        """Generate URBS .vec file content.
         
         Parameters
         ----------
         traveller : Traveller
             The traveller for traversing the catchment.
             
-        Returns
+        Returns:
         -------
         str
             The .vec file content with URBS commands
         """
         # Initialize traveller
         traveller.next()
-        
+
         # Create URBS vector writer
         vector_writer = UrbsVectorWriter(self.model_name)
-        
+
         # Traverse catchment and generate commands
         while traveller._pos != traveller._endSentinel:
             vector_writer.step(traveller)
-        
+
         return vector_writer.build_vec_file()
-    
+
     def getCatFile(self, traveller: Traveller) -> str:
-        """
-        Generate URBS .cat file content.
+        """Generate URBS .cat file content.
         
         Parameters
         ----------
         traveller : Traveller
             The traveller for traversing the catchment.
             
-        Returns
+        Returns:
         -------
         str
             The .cat file content with subcatchment data
         """
         cat_writer = UrbsCatWriter()
         return cat_writer.build_cat_file(traveller)
-    
+
     def getFiles(self, traveller: Traveller) -> tuple[str, str]:
-        """
-        Generate both URBS .vec and .cat file contents.
+        """Generate both URBS .vec and .cat file contents.
         
         Parameters
         ----------
         traveller : Traveller
             The traveller for traversing the catchment.
             
-        Returns
+        Returns:
         -------
         tuple[str, str]
             A tuple containing (.vec content, .cat content)
@@ -358,19 +350,19 @@ class URBS(Model):
         original_pos = traveller._pos
         traveller._pos = 0
         traveller.next()
-        
+
         # Create writers
         vector_writer = UrbsVectorWriter(self.model_name)
-        
+
         # Traverse catchment and generate commands
         while traveller._pos != traveller._endSentinel:
             vector_writer.step(traveller)
-        
+
         # Generate files
         vec_content = vector_writer.build_vec_file()
-        
+
         # Reset for cat file generation
         traveller._pos = original_pos
         cat_content = self.getCatFile(traveller)
-        
+
         return vec_content, cat_content
