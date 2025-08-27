@@ -34,7 +34,7 @@ from matplotlib.figure import Figure
 
 
 @dataclass
-class Config:
+class ReporterConfig:
     """Configuration parameters for hydrological analysis."""
     base_path: str
     run_prefix: str
@@ -46,11 +46,11 @@ class Config:
     time_threshold: float = 36.0
     
     @classmethod
-    def default_config(cls, base_path: str = './output/') -> 'Config':
+    def default_config(cls, base_path: str = './output/') -> 'ReporterConfig':
         """Create a default configuration."""
         return cls(
             base_path=base_path,
-            run_prefix='24013_predev_catchment_ ',
+            run_prefix='catchment_ ',
             aep_values=['10', '5', '2', '1', '0.05'],
             durations=['2', '3', '4_5', '6', '9', '12', '18', '24', '36', '48'],
             temporal_patterns=list(range(1, 11)),
@@ -75,7 +75,7 @@ class Config:
 class ResultLoader:
     """Handles loading and processing of hydrological data files."""
     
-    def __init__(self, config: Config):
+    def __init__(self, config: ReporterConfig):
         self.config = config
         
     def _format_aep(self, aep_value: str) -> str:
@@ -94,7 +94,11 @@ class ResultLoader:
 
     def _format_duration(self, duration: str) -> str:
         """Format duration value for file paths."""
-        return f"du{duration}hour"
+        if duration.find("min") > 0:
+            unit = ""
+        else:
+            unit = "hour"
+        return f"du{duration}{unit}"
     
     def _format_file_path(self, aep: str, duration: str, tp: int) -> str:
         """Create the full file path for a specific scenario."""
@@ -138,7 +142,7 @@ class ResultLoader:
                 # Handle inconsistent TP numbering in RORB output
                 temporal_patterns = [t + 10 for t in temporal_patterns]
         else:
-            raise FileNotFoundError("Files not found after 10 attempts")
+            raise FileNotFoundError(f"Files not found after 10 attempts: {self._format_file_path(formatted_aep, formatted_duration,'0')}")
         
         # Process and join dataframes
         for i, df in enumerate(dfs):
@@ -176,7 +180,7 @@ class ResultLoader:
 class ResultProcessor:
     """Analyzes hydrological data for peak flows and critical scenarios."""
     
-    def __init__(self, data: Dict[str, List[pd.DataFrame]], config: Config):
+    def __init__(self, data: Dict[str, List[pd.DataFrame]], config: ReporterConfig):
         self.data = data
         self.config = config
         self.results_cache: dict[str, pd.DataFrame] = {}  # Store calculated results for reuse
@@ -259,7 +263,7 @@ class ResultProcessor:
 class ResultVisualizer:
     """Visualizes hydrological data and analysis results."""
     
-    def __init__(self, config: Config):
+    def __init__(self, config: ReporterConfig):
         self.config = config
         
     def set_style(self, style: Optional[str] = None):
@@ -334,14 +338,14 @@ class ResultVisualizer:
 class ResultReporter:
     """Client interface for hydrological analysis and visualization."""
     
-    def __init__(self, config: Optional[Config] = None):
+    def __init__(self, config: Optional[ReporterConfig] = None):
         """
         Initialize the hydrological analysis client.
         
         Args:
             config: Configuration parameters (optional, uses defaults if not provided)
         """
-        self.config = config or Config.default_config()
+        self.config = config or ReporterConfig.default_config()
         self.loader = ResultLoader(self.config)
         self.data = None
         self.analyzer = None
@@ -389,6 +393,7 @@ class ResultReporter:
             raise ValueError("Data not loaded. Call load_data() first.")
             
         return self.analyzer.find_critical_scenario(aep, time_threshold)
+    
     def plot_duration_boxplot(self, aep: str, climate_year: str, title: str) -> Figure:
         """
         Create a boxplot of flows across durations.
@@ -404,6 +409,7 @@ class ResultReporter:
         """
         peak_flows = self.get_peak_flows(aep)
         return self.visualizer.plot_boxplot(peak_flows, aep, climate_year, title)
+    
     def plot_critical_hydrograph(self, 
                                 aep: str, 
                                 climate_year: str,
