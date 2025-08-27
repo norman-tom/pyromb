@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/plugins/build_rorb" >
-        <file>icon.png</file>
-    </qresource>
-</RCC>
