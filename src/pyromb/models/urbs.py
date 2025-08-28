@@ -1,4 +1,5 @@
 import csv
+from enum import Enum
 from io import StringIO
 
 from ..core.attributes.basin import Basin
@@ -33,7 +34,7 @@ class UrbsVectorWriter:
         if self._stateVector:
             self._control(self._stateVector[-1], traveller)
 
-    def build_vec_file(self) -> str:
+    def build_vec_file(self, traveller: Traveller) -> str:
         """ 
         Builds the URBS .vec file content with proper header and commands.
             
@@ -42,6 +43,11 @@ class UrbsVectorWriter:
         str
             The complete .vec file content with header and commands
         """
+        # Traverse catchment to generate commands
+        while traveller._pos != traveller._endSentinel:
+            self.step(traveller)
+
+        # Generate control vector. 
         vec_content = f"{self._model_name}\n"
         vec_content += "MODEL: SPLIT\n"
         vec_content += "USES: L CS U\n"
@@ -75,7 +81,7 @@ class UrbsVectorWriter:
 
         if i == traveller._endSentinel:
             ret = (0, i)  # End of traversal
-        elif (self._runningHydro == False) and (isinstance(traveller._catchment._vertices[i], Basin)):
+        if (self._runningHydro == False) and (isinstance(traveller._catchment._vertices[i], Basin)):
             # Start of new branch - use RAIN command
             self._runningHydro = True
             traveller.next()
@@ -97,7 +103,10 @@ class UrbsVectorWriter:
         elif (self._runningHydro) and (isinstance(traveller._catchment._vertices[i], Confluence)) and (up == i):
             # Route without local inflow - use ROUTE command
             traveller.next()
-            ret = (5, i)  # ROUTE
+            if traveller._pos == traveller._endSentinel:
+                ret = (0, i)  # If there is no DS reach, its the end.  
+            else: 
+                ret = (5, i)  # otherwise ROUTE
         else:
             # Default case
             traveller.next()
@@ -133,7 +142,7 @@ class UrbsVectorWriter:
             elif command_code == 5:  # ROUTE - Route without local inflow
                 self._generate_route_command(pos, traveller)
 
-            elif command_code == 7:  # PRINT - Output at node
+            elif command_code in (0, 7):  # PRINT - Output at node, always print at end. 
                 self._generate_print_command(pos, traveller)
 
         except Exception as e:
@@ -289,11 +298,15 @@ class URBS(Model):
     - Implements depth-first traversal logic for URBS command generation
     """
 
+    class Header(Enum):
+        CONTROL = "[[CONTROL]]",
+        CATCHMENT = "[[CATCHMENT]]"
+
     def __init__(self, model_name: str = "URBS_Model"):
         self.model_name = model_name
 
     def getVector(self, traveller: Traveller) -> str:
-        """Generate URBS .vec file content.
+        """Generate the URBS control and catchment content.
         
         Parameters
         ----------
@@ -303,66 +316,40 @@ class URBS(Model):
         Returns:
         -------
         str
-            The .vec file content with URBS commands
+            The .vec file and .cat strings concatonated together with headers '[[CONTROL]]' and '[[CATCHMENT]]'.
         """
-        # Initialize traveller
-        traveller.next()
-
-        # Create URBS vector writer
-        vector_writer = UrbsVectorWriter(self.model_name)
-
-        # Traverse catchment and generate commands
-        while traveller._pos != traveller._endSentinel:
-            vector_writer.step(traveller)
-
-        return vector_writer.build_vec_file()
-
-    def getCatFile(self, traveller: Traveller) -> str:
-        """Generate URBS .cat file content.
-        
-        Parameters
-        ----------
-        traveller : Traveller
-            The traveller for traversing the catchment.
-            
-        Returns:
-        -------
-        str
-            The .cat file content with subcatchment data
-        """
-        cat_writer = UrbsCatWriter()
-        return cat_writer.build_cat_file(traveller)
-
-    def getFiles(self, traveller: Traveller) -> tuple[str, str]:
-        """Generate both URBS .vec and .cat file contents.
-        
-        Parameters
-        ----------
-        traveller : Traveller
-            The traveller for traversing the catchment.
-            
-        Returns:
-        -------
-        tuple[str, str]
-            A tuple containing (.vec content, .cat content)
-        """
-        # Reset traveller to start
-        original_pos = traveller._pos
-        traveller._pos = 0
-        traveller.next()
 
         # Create writers
         vector_writer = UrbsVectorWriter(self.model_name)
+        cat_writer = UrbsCatWriter()
 
-        # Traverse catchment and generate commands
-        while traveller._pos != traveller._endSentinel:
-            vector_writer.step(traveller)
+        # Generate control string
+        traveller.next()
+        vec_content = vector_writer.build_vec_file(traveller)
 
-        # Generate files
-        vec_content = vector_writer.build_vec_file()
+        # Generate catchment string
+        cat_content = cat_writer.build_cat_file(traveller)
 
-        # Reset for cat file generation
-        traveller._pos = original_pos
-        cat_content = self.getCatFile(traveller)
+        # return both as a concatenated string to keep interface consistent, will split later.
+        return f"{URBS.Header.CONTROL.value}\n{vec_content}\n{URBS.Header.CATCHMENT.value}\n{cat_content}"
+    
+    def splitVector(self, vector: str) -> tuple[str, str]:
+        """
+        Split the generated vector into a control string and catchment definition string. 
+        """
+        control_line_idx = 0
+        catchment_line_idx = 0
+        lines = vector.splitlines()
+        for i, line in enumerate(lines):
+            match line:
+                case URBS.Header.CONTROL.value:
+                    control_line_idx = i
+                case URBS.Header.CATCHMENT.value:
+                    catchment_line_idx = i
+                case _:
+                    continue
 
-        return vec_content, cat_content
+        control_content = "\n".join(lines[control_line_idx+1: catchment_line_idx])
+        catchment_content = "\n".join(lines[catchment_line_idx+1:])
+        
+        return control_content.strip('\n'), catchment_content.strip('\n')
