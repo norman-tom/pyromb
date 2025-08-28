@@ -11,9 +11,10 @@ def test_rorb(vectors) -> None:
     tb = builder.basin(vectors.centroids, vectors.basins)
 
     catchment = pyromb.Catchment(tc, tb, tr)
-    connected = catchment.connect()
+    catchment.connect()
     traveller = pyromb.Traveller(catchment)
 
     control_str = traveller.getVector(model)
     
     assert control_str
+    assert control_str.startswith("REACH")

@@ -1,5 +1,6 @@
-import pytest
+import os
 
+import pytest
 import pyromb
 
 @pytest.mark.urbs
@@ -11,9 +12,14 @@ def test_urbs(vectors) -> None:
     tb = builder.basin(vectors.centroids, vectors.basins)
 
     catchment = pyromb.Catchment(tc, tb, tr)
-    connected = catchment.connect()
+    catchment.connect()
     traveller = pyromb.Traveller(catchment)
 
-    control_str = traveller.getVector(model)
+    urbs_vector = traveller.getVector(model)
+    vec_content, cat_content = model.splitVector(urbs_vector)
+    
+    assert vec_content
+    assert vec_content.startswith("URBS_Model")
 
-    assert control_str
+    assert cat_content
+    assert cat_content.startswith("Index,Name,Area,Imperviousness,IL,CL")
