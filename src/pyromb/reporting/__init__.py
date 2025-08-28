@@ -1,1 +1,3 @@
-from . import rorb
+from .rorb import ResultProcessor
+
+__all__ = ["ResultProcessor"]

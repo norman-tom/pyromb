@@ -1,8 +1,10 @@
 import numpy as np
-from .attributes.reach import Reach
+
+from .model import Model
 from .attributes.node import Node
+from .attributes.reach import Reach
 from .catchment import Catchment
-from ..model.model import Model
+
 
 class Traveller:
     """The Traveller walks through the catchment, proceeding from the very most upstream
@@ -31,43 +33,42 @@ class Traveller:
     def position(self) -> int:
         """Position of the traveller.
 
-        Returns
+        Returns:
         -------
         int
             The current position of the traveller. 
         """
         return self._pos
-        
+
     def getStart(self) -> int:
-        """Gets the position of the outlet node of the basin. 
+        """Gets the position of the outlet node of the basin.
         
         That is the most downstream node. Assumes that there is only one 
         outlet in a basin. i.e. only one node with no reaches downstream of it.
 
-        Returns
+        Returns:
         -------
         int
             The index of the outlet node. 
         """
-
         for i, val in enumerate(self._ds):
             if sum(val) == (-len(val)):
                 return i
-    
+
     def getReach(self, i: int) -> Reach:
-        """The downstream reach connected to ith node. 
+        """The downstream reach connected to ith node.
 
         Parameters
         ----------
         i : int
             The index of the node we wish to get the downstream reach for. 
 
-        Returns
+        Returns:
         -------
         Reach
             The reach downstream of the ith node. 
 
-        Raises
+        Raises:
         ------
         KeyError
             If the ith node does not exist.
@@ -76,7 +77,7 @@ class Traveller:
             if val != self._endSentinel:
                 return self._catchment._edges[j]
         raise KeyError
-    
+
     def getNode(self, i: int) -> Node:
         """The ith node.
 
@@ -85,7 +86,7 @@ class Traveller:
         i : int
             The index of the node to return. 
 
-        Returns
+        Returns:
         -------
         Node
             The ith node.
@@ -93,7 +94,7 @@ class Traveller:
         return self._catchment._vertices[i]
 
     def top(self, i: int) -> int:
-        """ The node index of the most upstream catchment avaiable from node i.
+        """The node index of the most upstream catchment avaiable from node i.
 
         Does not update the position of the traveller, that is the traveller does not travel
         to this node. An avaiable catchment is one which has not been visited by _next().
@@ -103,7 +104,7 @@ class Traveller:
         i : int
             The position to query the most upstream catchment from. 
 
-        Returns
+        Returns:
         -------
         int
             The index of the node. 
@@ -115,9 +116,9 @@ class Traveller:
                 else:
                     continue
         return i
-    
+
     def up(self, i: int) -> list:
-        """Returns the immediate upstream nodes from position i. 
+        """Returns the immediate upstream nodes from position i.
         
         A subarea can have multiple upstream nodes and so will return all of them.
 
@@ -126,7 +127,7 @@ class Traveller:
         i : int
             the position which the upstream nodes are to be queried. 
 
-        Returns
+        Returns:
         -------
         list
             The index of all upstream nodes.
@@ -144,7 +145,7 @@ class Traveller:
         i : int
             The position at which the downstream nodes are to be queried from. 
 
-        Returns
+        Returns:
         -------
         int
             The index of the downstream node or -1 if none.
@@ -153,20 +154,19 @@ class Traveller:
             if val != -1:
                 return val
         return self._endSentinel
-    
+
     def next(self) -> int:
-        """The next upstream node within the catchment available from the current position. 
+        """The next upstream node within the catchment available from the current position.
         
         If the current position is on a confluence next() will return that node before 
         going up the next reach. This is due to RORB needing to save the state at that 
         confluence before calculating the hydrographs of upstream sub basins. 
         
-        Returns
+        Returns:
         -------
         int
             The index of the upstream node. 
         """
-
         top = self.top(self._pos)
         if top == self._pos:
             self._colour[self._pos] = 1
@@ -175,7 +175,7 @@ class Traveller:
         else:
             self._pos = top
             return self._pos
-        
+
     def nextAbsolute(self) -> int:
         """The absolute upper most node availabe from the current position.
 
@@ -185,16 +185,15 @@ class Traveller:
         prior to using nextAbsolute as it assumes the traveller started at a node
         with no reaches above it, that is, at the top of the catchment. 
         
-        Returns
+        Returns:
         -------
         int
             The index of the upstream node.
 
-        See Also
+        See Also:
         --------
         next : next upstream node
         """
-
         self._colour[self._pos] = 1
         self._pos = self.down(self._pos)
         top = self.top(self._pos)
@@ -205,7 +204,7 @@ class Traveller:
             return self._pos
 
     def getVector(self, model: Model) -> str:
-        """Produce the vector for the desired hydrology model. 
+        """Produce the vector for the desired hydrology model.
         
         Supports either RORB or WBNM.  
 
@@ -214,10 +213,9 @@ class Traveller:
         model : Model
             The hydrology model to generate the control file for. 
 
-        Returns
+        Returns:
         -------
         str
             The control file string.
         """
-
         return model.getVector(self)

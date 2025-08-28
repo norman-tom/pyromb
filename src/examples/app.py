@@ -1,7 +1,9 @@
 import os
-import pyromb
-from plot_catchment import plot_catchment
+
 import shapefile as sf
+from plot_catchment import plot_catchment
+
+import pyromb
 
 DIR = os.path.dirname(__file__)
 REACH_PATH = os.path.join(DIR, '../data', 'reaches.shp')
@@ -10,8 +12,7 @@ CENTROID_PATH = os.path.join(DIR, '../data', 'centroids.shp')
 CONFUL_PATH = os.path.join(DIR, '../data', 'confluences.shp')
 
 class SFVectorLayer(sf.Reader, pyromb.VectorLayer):
-    """
-    Wrap the shapefile.Reader() with the necessary interface
+    """Wrap the shapefile.Reader() with the necessary interface
     to work with the builder. 
     """
     def __init__(self, path) -> None:
@@ -19,10 +20,10 @@ class SFVectorLayer(sf.Reader, pyromb.VectorLayer):
 
     def geometry(self, i) -> list:
         return self.shape(i).points
-    
+
     def record(self, i) -> dict:
         return super().record(i)
-    
+
     def __len__(self) -> int:
         return super().__len__()
 
@@ -32,29 +33,29 @@ def main():
     model = pyromb.RORB() # Select your hydrology model, either pyromb.RORB() or pyromb.WBNM()
 
     ### Build Catchment Objects ###
-    # Vector layers 
+    # Vector layers
     reach_vector = SFVectorLayer(REACH_PATH)
     basin_vector = SFVectorLayer(BASIN_PATH)
     centroid_vector = SFVectorLayer(CENTROID_PATH)
     confluence_vector = SFVectorLayer(CONFUL_PATH)
-    # Create the builder. 
+    # Create the builder.
     builder = pyromb.Builder()
     # Build each element as per the vector layer.
     tr = builder.reach(reach_vector)
     tc = builder.confluence(confluence_vector)
     tb = builder.basin(centroid_vector, basin_vector)
-    
-    ### Create the catchment ### 
+
+    ### Create the catchment ###
     catchment = pyromb.Catchment(tc, tb, tr)
     connected = catchment.connect()
     # Create the traveller and pass the catchment.
     traveller = pyromb.Traveller(catchment)
-    
+
     ### Write ###
     # Control vector to file with a call to the Traveller's getVector method
     with open(os.path.join(DIR, '../vector.catg' if isinstance(model, pyromb.RORB) else '../runfile.wbn'), 'w') as f:
         f.write(traveller.getVector(model))
-    
+
     ### Plot the catchment ###.
     if plot: plot_catchment(connected, tr, tc, tb)
 

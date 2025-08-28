@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+archive/
+src/build_rorb/
+
 # Distribution / packaging
 .Python
 build/
@@ -120,6 +123,9 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# vscode
+.vscode
+
 # mypy
 .mypy_cache/
 .dmypy.json
@@ -127,3 +133,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#uv
+uv.lock
+
+#ruff
+.ruff_cache
+
+#output files
+*.catg
+*.vec
+*.cat
