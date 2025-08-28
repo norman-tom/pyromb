@@ -73,13 +73,8 @@ class ReporterConfig:
 
 class ResultLoader:
     """Handles loading and processing of hydrological data files."""
-<<<<<<< HEAD
     
     def __init__(self, config: ReporterConfig):
-=======
-
-    def __init__(self, config: Config):
->>>>>>> urbs_init
         self.config = config
 
     def _format_aep(self, aep_value: str) -> str:
@@ -98,17 +93,12 @@ class ResultLoader:
 
     def _format_duration(self, duration: str) -> str:
         """Format duration value for file paths."""
-<<<<<<< HEAD
         if duration.find("min") > 0:
             unit = ""
         else:
             unit = "hour"
         return f"du{duration}{unit}"
     
-=======
-        return f"du{duration}hour"
-
->>>>>>> urbs_init
     def _format_file_path(self, aep: str, duration: str, tp: int) -> str:
         """Create the full file path for a specific scenario."""
         return f"{self.config.base_path}{self.config.run_prefix}{aep}_{duration}tp{tp}.csv"
@@ -150,13 +140,8 @@ class ResultLoader:
                 # Handle inconsistent TP numbering in RORB output
                 temporal_patterns = [t + 10 for t in temporal_patterns]
         else:
-<<<<<<< HEAD
             raise FileNotFoundError(f"Files not found after 10 attempts: {self._format_file_path(formatted_aep, formatted_duration,'0')}")
         
-=======
-            raise FileNotFoundError("Files not found after 10 attempts")
-
->>>>>>> urbs_init
         # Process and join dataframes
         for i, df in enumerate(dfs):
             if i == 0:
@@ -191,13 +176,8 @@ class ResultLoader:
 
 class ResultProcessor:
     """Analyzes hydrological data for peak flows and critical scenarios."""
-<<<<<<< HEAD
     
     def __init__(self, data: Dict[str, List[pd.DataFrame]], config: ReporterConfig):
-=======
-
-    def __init__(self, data: Dict[str, List[pd.DataFrame]], config: Config):
->>>>>>> urbs_init
         self.data = data
         self.config = config
         self.results_cache: dict[str, pd.DataFrame] = {}  # Store calculated results for reuse
@@ -277,13 +257,8 @@ class ResultProcessor:
 
 class ResultVisualizer:
     """Visualizes hydrological data and analysis results."""
-<<<<<<< HEAD
     
     def __init__(self, config: ReporterConfig):
-=======
-
-    def __init__(self, config: Config):
->>>>>>> urbs_init
         self.config = config
 
     def set_style(self, style: Optional[str] = None):
@@ -355,16 +330,10 @@ class ResultVisualizer:
 
 class ResultReporter:
     """Client interface for hydrological analysis and visualization."""
-<<<<<<< HEAD
     
     def __init__(self, config: Optional[ReporterConfig] = None):
         """
         Initialize the hydrological analysis client.
-=======
-
-    def __init__(self, config: Optional[Config] = None):
-        """Initialize the hydrological analysis client.
->>>>>>> urbs_init
         
         Args:
             config: Configuration parameters (optional, uses defaults if not provided)
@@ -429,14 +398,9 @@ class ResultReporter:
         """
         peak_flows = self.get_peak_flows(aep)
         return self.visualizer.plot_boxplot(peak_flows, aep, climate_year, title)
-<<<<<<< HEAD
     
     def plot_critical_hydrograph(self, 
                                 aep: str, 
-=======
-    def plot_critical_hydrograph(self,
-                                aep: str,
->>>>>>> urbs_init
                                 climate_year: str,
                                 title: str,
                                 time_threshold: Optional[float] = None) -> Figure:
